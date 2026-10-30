@@ -22,7 +22,7 @@ Vor jedem Commit: Debug-Build ohne Warnungen. Bei Änderungen an Paketen, Startc
 - `App.CreateWindow` öffnet direkt `MainPage` mit der `BlazorWebView`. Kein MAUI Shell, keine XAML-Seiten: Navigation macht der Blazor-Router (`Components/Routes.razor`), Seiten liegen in `Components/Pages` mit `@page`.
 - `MauiProgram` richtet Shiny (`UseShiny`), Shiny Mediator (`AddShinyMediator` mit `UseBlazor`) und die Konfiguration ein (`appsettings.json` plus `appsettings.android.json`/`appsettings.apple.json` als MauiAsset).
 - Backend-Zugriff läuft über Shiny Mediator HTTP. Contracts werden aus der OpenAPI-Beschreibung von vereine-api generiert, sobald es Endpunkte gibt (README, Abschnitt API-Anbindung). Basis-URLs stehen unter `Mediator:Http` in den appsettings, Kopfzeilen setzt `Infrastructure/AppHttpRequestDecorator`.
-- Farben und Hell/Dunkel als CSS-Variablen in `wwwroot/css/app.css`; Komponenten-CSS als `*.razor.css`.
+- Aussehen kommt aus dem Designsystem in vereine-web (`design/`): erzeugt werden `wwwroot/css/tokens.css`, `wwwroot/css/base.css`, `wwwroot/icons.svg`, `Components/Design/IconName.cs`, `Resources/Styles/Tokens.xaml` und `Tokens.props` (Icon- und Splash-Farbe) sowie `Platforms/Android/Resources/values/colors.xml`. `wwwroot/css/app.css` hält nur App-Eigenes, Komponenten-CSS liegt als `*.razor.css` daneben. Icons über `Components/Design/Icon.razor`.
 
 ## Harte Regeln
 
@@ -37,6 +37,16 @@ Vor jedem Commit: Debug-Build ohne Warnungen. Bei Änderungen an Paketen, Startc
 4. **Versionen zentral** in `Directory.Packages.props`, SDK in `global.json`. Bei neuer .NET-Vorschau gemeinsam mit vereine-api und dem Workspace heben (`dotnet workload install maui-android` nach SDK-Wechsel).
 5. **Konfiguration bleibt im Repo:** Skills, MCP-Server, Agent-Einstellungen und .NET-Werkzeuge liegen hier und werden eingecheckt, nichts auf Benutzer- oder globaler Ebene.
 6. **Conventional Commits auf Deutsch.** Keine Secrets, Keystores, Signierprofile oder echten Daten committen (öffentliches Repo).
+
+## Designsystem
+
+Oberfläche in App und Verwaltungswebseite folgt einem Designsystem nach dem Vorbild von Spotify (Encore): dunkel und hell gleichwertig, Inhalt statt Rahmen, große Titel, wenig Text, ein Akzent. Vor jeder Arbeit an Razor, CSS, XAML-Farben oder Bildschirmtexten den Skill `vereine-design` lesen. Kurz:
+
+- **Nichts hart codiert.** Farben, Schrift, Abstände, Radien, Schatten, Dauer nur als `var(--…)` aus den Tokens, keine Inline-Styles. `tools/check-design.sh` läuft in jedem Build und macht Verstöße zu Build-Fehlern (VDS001 bis VDS005); Hooks melden sie schon nach jedem Edit.
+- **Bausteine statt eigenem CSS** (`wwwroot/css/base.css`, Markup im Skill unter `bausteine.md`). `*.razor.css` nur für die Anordnung.
+- **Erzeugte Dateien nie von Hand ändern**, auch nicht den Skill `vereine-design`: die Quelle liegt in vereine-web (`design/` und `.claude/skills/vereine-design`), danach dort `npm run design`; das schreibt beide Repos, beide committen.
+- **Keine Spotify-Marke:** kein Spotify-Grün, kein Logo, keine Circular-Schrift. Entscheidung: `docs/adr/0003-designsystem-aus-vereine-web.md`.
+- Größere Oberflächen vor dem Abschluss vom Subagenten `design-review` prüfen lassen.
 
 ## Skills
 
@@ -54,6 +64,7 @@ Alle liegen in `.claude/skills` (für Codex über den Symlink `.agents/skills`).
 | Kalender, Kontakte, Biometrie, Store-Updates | `shiny-calendarstore`, `shiny-contactstore`, `shiny-biometrics`, `shiny-appstore` |
 | Lokale Dokumentablage | `shiny-documentdb` |
 | App bedienen, Screenshots, Visual Tree, Logs | `maui-devflow-debug` (Einrichtung: `maui-devflow-onboard`) |
+| Designsystem: Tokens, Bausteine, Icons, Texte (erzeugt aus vereine-web) | `vereine-design` |
 
 Die übrigen Shiny-Skills (Bluetooth, OBD, Gamepad, Wi-Fi …) liegen bereit, sind für eine Vereins-App aber selten relevant.
 

@@ -6,6 +6,8 @@
     <meta name="color-scheme" content="light dark" />
     <title>Vereine</title>
     <base href="/" />
+    <link rel="stylesheet" href="css/tokens.css" />
+    <link rel="stylesheet" href="css/base.css" />
     <link rel="stylesheet" href="css/app.css" />
     <link rel="stylesheet" href="Vereine.App.styles.css" />
     <link rel="icon" type="image/png" href="favicon.png" />
@@ -14,10 +16,12 @@
 <body>
     <div id="app"></div>
 
-    <div id="blazor-error-ui">
+    <div id="blazor-error-ui" class="set-negative" role="alert">
         Etwas ist schiefgelaufen.
         <a href="" class="reload">Neu laden</a>
-        <a class="dismiss" aria-label="Schließen">✕</a>
+        <button type="button" class="dismiss icon-button" aria-label="Schließen">
+            <svg class="icon" aria-hidden="true" focusable="false"><use href="icons.svg#x" /></svg>
+        </button>
     </div>
 
     <script src="_framework/blazor.webview.js" autostart="false"></script>

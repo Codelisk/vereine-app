@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Erzeugt aus vereine-web/design mit `npm run design`. Nicht von Hand ändern. -->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+    <Color x:Key="FrameBackgroundLight">#FFFFFF</Color>
+    <Color x:Key="FrameBackgroundDark">#0F1210</Color>
+</ResourceDictionary>

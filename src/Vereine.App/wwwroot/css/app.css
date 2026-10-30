@@ -1,92 +1,40 @@
-/* Farben und Abstaende der App. Hell/Dunkel folgt der Systemeinstellung (prefers-color-scheme). */
-:root {
-    color-scheme: light dark;
-    --primaer: #1e6b3a;
-    --auf-primaer: #ffffff;
-    --hintergrund: #ffffff;
-    --flaeche: #f3f5f4;
-    --text: #1a1c1b;
-    --text-leise: #5b625e;
-    --fehler: #b3261e;
-    --auf-fehler: #ffffff;
-    --rand: #d9dedb;
-}
+/* Nur App-spezifisches. Tokens und Bausteine kommen aus tokens.css und base.css (erzeugt aus vereine-web/design,
+   Skill vereine-design). Feste Werte prüft der Build (tools/check-design.sh). */
 
-@media (prefers-color-scheme: dark) {
-    :root {
-        --primaer: #2f8f52;
-        --auf-primaer: #ffffff;
-        --hintergrund: #121413;
-        --flaeche: #1d201e;
-        --text: #e6e9e7;
-        --text-leise: #a3aaa6;
-        --fehler: #f2b8b5;
-        --auf-fehler: #601410;
-        --rand: #2e3330;
-    }
-}
-
-*, *::before, *::after {
-    box-sizing: border-box;
-}
-
-html, body {
-    margin: 0;
-    background: var(--hintergrund);
-    color: var(--text);
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    font-size: 16px;
-    line-height: 1.5;
-    -webkit-tap-highlight-color: transparent;
-}
-
-h1 {
-    margin: 0 0 0.5rem;
-    font-size: 1.5rem;
-    line-height: 1.25;
-}
-
-h1:focus {
-    outline: none;
-}
-
-a {
-    color: var(--primaer);
-}
-
-.hinweis {
-    margin: 0;
-    color: var(--text-leise);
+html,
+body {
+    overscroll-behavior: none;
 }
 
 #blazor-error-ui {
     display: none;
     position: fixed;
-    left: 0;
-    right: 0;
+    inset-inline: 0;
     bottom: 0;
-    z-index: 1000;
-    padding: 0.75rem 3rem calc(env(safe-area-inset-bottom) + 0.75rem) 1rem;
-    background: var(--fehler);
-    color: var(--auf-fehler);
+    z-index: var(--layer-toast);
+    padding: var(--space-3) var(--space-8) calc(env(safe-area-inset-bottom) + var(--space-3)) var(--space-page);
+    background: var(--background-base);
+    color: var(--text-base);
+    box-shadow: var(--elevation-1);
 }
 
 #blazor-error-ui .reload {
-    color: inherit;
-    margin-left: 0.5rem;
+    margin-inline-start: var(--space-2);
+    font-weight: var(--font-weight-bold);
 }
 
 #blazor-error-ui .dismiss {
     position: absolute;
-    top: 0.75rem;
-    right: 1rem;
-    cursor: pointer;
+    top: 0;
+    right: var(--space-2);
+    color: var(--text-base);
 }
 
 .blazor-error-boundary {
-    padding: 1rem;
-    background: var(--fehler);
-    color: var(--auf-fehler);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+    background: var(--background-tinted-base);
+    color: var(--text-negative);
 }
 
 .blazor-error-boundary::after {

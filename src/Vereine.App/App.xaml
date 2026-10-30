@@ -3,10 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="Vereine.App.App">
     <Application.Resources>
-        <ResourceDictionary>
-            <!-- Hintergrund hinter der BlazorWebView (Safe Areas, Laden); gleiche Werte wie in wwwroot/css/app.css -->
-            <Color x:Key="HintergrundHell">#FFFFFF</Color>
-            <Color x:Key="HintergrundDunkel">#121413</Color>
-        </ResourceDictionary>
+        <!-- Farben des nativen Rahmens (Hintergrund hinter der BlazorWebView), erzeugt aus vereine-web/design/tokens.json -->
+        <ResourceDictionary Source="Resources/Styles/Tokens.xaml" />
     </Application.Resources>
 </Application>

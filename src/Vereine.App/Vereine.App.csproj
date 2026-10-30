@@ -88,9 +88,18 @@
     <CustomEntitlements Include="keychain-access-groups" Type="StringArray" Value="%24(AppIdentifierPrefix)$(ApplicationId)" Visible="false" />
   </ItemGroup>
 
+  <!-- Designsystem (Skill vereine-design): Farben fuer Icon und Splash kommen aus den Design-Tokens, erzeugt aus
+       vereine-web/design/tokens.json. Der Build prueft Razor, CSS, XAML und dieses csproj auf feste Werte
+       (tools/check-design.sh); Treffer sind Build-Fehler. -->
+  <Import Project="Resources\Styles\Tokens.props" />
+
+  <Target Name="_VereineDesignPruefen" BeforeTargets="BeforeBuild" Condition="'$(OS)' != 'Windows_NT'">
+    <Exec Command="bash &quot;$(MSBuildProjectDirectory)/../../tools/check-design.sh&quot;" IgnoreExitCode="true" StandardOutputImportance="low" />
+  </Target>
+
   <ItemGroup Label="Ressourcen">
-    <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#1E6B3A" />
-    <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#1E6B3A" BaseSize="128,128" />
+    <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="$(VereineIconColor)" />
+    <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="$(VereineSplashColor)" BaseSize="128,128" />
 
     <!-- Konfiguration ueber Shiny.Extensions.Configuration: appsettings.json plus Plattform-Datei -->
     <MauiAsset Include="appsettings.json" LogicalName="appsettings.json" />

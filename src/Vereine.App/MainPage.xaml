@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:components="clr-namespace:Vereine.App.Components"
              x:Class="Vereine.App.MainPage"
-             BackgroundColor="{AppThemeBinding Light={StaticResource HintergrundHell}, Dark={StaticResource HintergrundDunkel}}">
+             BackgroundColor="{AppThemeBinding Light={StaticResource FrameBackgroundLight}, Dark={StaticResource FrameBackgroundDark}}">
 
     <BlazorWebView x:Name="BlazorWebView" HostPage="wwwroot/index.html">
         <BlazorWebView.RootComponents>

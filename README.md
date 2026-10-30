@@ -13,6 +13,7 @@ Weitere Teile: `vereine-api` (Backend, .NET 11 und Microsoft Orleans) und `verei
 | Basis | Shiny Hosting, Shiny Mediator (MAUI und Blazor), Shiny Configuration |
 | Veröffentlichung | NativeAOT, volles Trimmen (`docs/adr/0002-nativeaot.md`) |
 | Plattformen | Android (ab 8.0, API 26), iOS (ab 15) |
+| Design | Designsystem aus vereine-web (`design/`), nach dem Vorbild von Spotify (Encore), Icons von Phosphor (MIT) |
 
 ## Voraussetzungen
 
@@ -32,6 +33,10 @@ dotnet publish src/Vereine.App -f net11.0-ios -c Release -r ios-arm64   # macOS
 
 Build-Ausgaben liegen unter `artifacts/` (`UseArtifactsOutput`). Warnungen sind Fehler.
 
+Jeder Build ruft `tools/check-design.sh` auf: feste Farben, Schriftgrößen, Abstände, Inline-Styles oder unbekannte
+Tokens brechen ihn ab. Das Designsystem selbst wird in vereine-web gepflegt (`npm run design` dort schreibt die
+erzeugten Dateien hierher, `docs/adr/0003-designsystem-aus-vereine-web.md`).
+
 ## Aufbau
 
 ```
@@ -39,14 +44,14 @@ src/Vereine.App/
   MauiProgram.cs            Shiny, Mediator, BlazorWebView, Konfiguration, DevFlow (nur Debug)
   App.xaml(.cs)             App-Rahmen, öffnet MainPage
   MainPage.xaml(.cs)        Seite mit der BlazorWebView
-  Components/               Router, Layout, Seiten (Razor)
+  Components/               Router, Layout, Seiten (Razor); Design/ mit Icon-Komponente
   Infrastructure/           Querschnitt, z. B. Kopfzeilen für HTTP-Aufrufe
   Platforms/Android|iOS/    Plattformeinstieg, Manifest, Info.plist, Privacy-Manifest
-  Resources/                App-Icon und Splash
-  wwwroot/                  index.html und CSS (Farben, Hell/Dunkel)
+  Resources/                App-Icon und Splash; Styles/ mit erzeugten Farben für XAML und MSBuild
+  wwwroot/                  index.html, icons.svg, css/ (tokens.css und base.css erzeugt, app.css App-Eigenes)
   appsettings*.json         Konfiguration (gemeinsam plus Android bzw. Apple)
 docs/adr/                   Architekturentscheidungen
-tools/                      Hilfsskripte (Shiny-Skills aktualisieren)
+tools/                      Hilfsskripte (Shiny-Skills aktualisieren, check-design.sh)
 ```
 
 ## API-Anbindung
@@ -77,4 +82,5 @@ Alles projektlokal und eingecheckt:
 - `.claude/skills/`: Shiny-Skills (unverändert aus [shinyorg/skills](https://github.com/shinyorg/skills), aktualisieren mit `tools/sync-shiny-skills.sh [ref]`) und MAUI-DevFlow-Skills (`dotnet maui devflow skills update --scope project --target claude`). `.agents/skills` verweist für Codex darauf.
 - `.config/dotnet-tools.json`: `maui` CLI mit `maui devflow` zum Bedienen der laufenden Debug-App (Visual Tree, Screenshots, Logs, Blazor über CDP).
 - `.mcp.json` (Claude) und `.codex/config.toml` (Codex): Microsoft-Learn-Doku, für Claude zusätzlich context7.
+- `.claude/skills/vereine-design/` (erzeugt aus vereine-web), `.claude/rules/design.md`, Subagent `.claude/agents/design-review.md` und Hooks in `.claude/hooks/`: halten Claude beim Designsystem.
 - `CLAUDE.md`/`AGENTS.md`: Regeln und Einstieg.

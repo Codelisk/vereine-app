@@ -1,0 +1,21 @@
+@* Icon aus dem Sprite wwwroot/icons.svg (Phosphor, Skill vereine-design, icons.md). Nur Namen aus IconName.
+   Dekorativ: die Bedeutung trägt der Text daneben oder das aria-label des Buttons. *@
+<svg class="@CssClass" aria-hidden="true" focusable="false"><use href="@($"icons.svg#{SpriteRef}")" /></svg>
+
+@code {
+    [Parameter, EditorRequired] public IconName Name { get; set; }
+
+    /// <summary>Gefüllte Form für den aktiven Zustand, z. B. den gewählten Tab.</summary>
+    [Parameter] public bool Filled { get; set; }
+
+    [Parameter] public IconSize Size { get; set; } = IconSize.Medium;
+
+    private string SpriteRef => Filled ? $"{Name.SpriteId}-fill" : Name.SpriteId;
+
+    private string CssClass => Size switch
+    {
+        IconSize.Small => "icon icon-sm",
+        IconSize.Large => "icon icon-lg",
+        _ => "icon",
+    };
+}

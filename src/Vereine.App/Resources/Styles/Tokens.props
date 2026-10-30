@@ -1,0 +1,7 @@
+<Project>
+  <!-- Erzeugt aus vereine-web/design mit `npm run design`. Nicht von Hand ändern. -->
+  <PropertyGroup>
+    <VereineIconColor>#13703A</VereineIconColor>
+    <VereineSplashColor>#13703A</VereineSplashColor>
+  </PropertyGroup>
+</Project>
