@@ -1,0 +1,6 @@
+#:schema https://developers.openai.com/codex/config-schema.json
+
+# Offizielle Microsoft-Dokumentation (.NET MAUI, Blazor, NativeAOT).
+# Projektlokal: Codex laedt diese Konfiguration nur fuer ein vertrautes Repo.
+[mcp_servers.microsoft-learn]
+url = "https://learn.microsoft.com/api/mcp"

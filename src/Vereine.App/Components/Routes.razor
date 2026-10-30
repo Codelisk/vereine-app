@@ -1,0 +1,13 @@
+@using System.Diagnostics.CodeAnalysis
+@* Blazor setzt Komponenten-Parameter per Reflection. Fuer Router.NotFoundPage (Type mit DynamicallyAccessedMembers)
+   meldet der Trimmer deshalb IL2110/IL2111. Die Seite steht hier per typeof und liegt in der App-Assembly, die als
+   TrimmerRootAssembly ganz erhalten bleibt (Vereine.App.csproj). *@
+@attribute [UnconditionalSuppressMessage("Trimming", "IL2110", Justification = "NotFoundPage verweist per typeof auf eine Seite der gerooteten App-Assembly.")]
+@attribute [UnconditionalSuppressMessage("Trimming", "IL2111", Justification = "NotFoundPage verweist per typeof auf eine Seite der gerooteten App-Assembly.")]
+
+<Router AppAssembly="@typeof(MauiProgram).Assembly" NotFoundPage="@typeof(Pages.NotFound)">
+    <Found Context="routeData">
+        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+    </Found>
+</Router>

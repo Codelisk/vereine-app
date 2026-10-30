@@ -1,0 +1,242 @@
+# ShinyImage
+
+A remote image that always shows *something*: placeholder artwork, a loading ring, the image itself, or error artwork. On MAUI it loads through an `IImageService` that caches to memory and disk, caps how many downloads run at once, and collapses concurrent requests for the same URI into one, and it renders **SVG** as vectors rather than as a rasterized bitmap. On Blazor it streams through `fetch` so the ring can report a real download percentage, falling back to a plain `<img>` when CORS blocks that; SVG there is the browser's own `<img>` rendering and needs nothing extra.
+
+Use it anywhere a URL is bound to an image — avatars, product photos, feed images, thumbnail grids. For a full-screen zoomable viewer use `ImageViewer` instead; for editing use `ImageEditor`.
+
+## The loading ring picks its own mode
+
+There is no `IsIndeterminate` to set. `ImageLoadProgress.Percent` is `null` in exactly the cases where a percentage would be a lie:
+
+- the request is **queued**, waiting for a download slot — nothing has been measured yet
+- the response carried **no `Content-Length`** (chunked transfer, or a proxy that stripped it)
+- the browser is loading the image itself (Blazor CORS fallback)
+
+Null → the ring spins. Non-null → the ring fills and shows the percentage. Generate code that binds `Uri` and lets the control decide; do **not** try to drive the mode manually.
+
+## MAUI
+
+```xml
+<shiny:ShinyImage Uri="{Binding AvatarUrl}"
+                  PlaceholderImage="avatar_placeholder.png"
+                  ErrorImage="broken_image.png"
+                  Aspect="AspectFill"
+                  HeightRequest="120" />
+```
+
+`PlaceholderImage` sits **behind** the ring rather than being swapped out for it, so a blurred thumbnail with a progress ring over it is two properties.
+
+### Properties (MAUI)
+
+| Property | Type | Default | Description |
+|---|---|---|---|
+| Uri | string? | null | The image to load. `http`/`https` goes through `IImageService`; `resource://Name` reads an embedded resource; `data:` is decoded inline; anything else is a file path or bundled asset. SVG is detected from the payload, not the extension |
+| Source | ImageSource? | null | An explicit source. Takes precedence over `Uri` and skips the service entirely — use it for embedded resources, font images or a stream you already hold |
+| PlaceholderImage | ImageSource? | null | Artwork shown before and during the load, behind the ring |
+| ErrorImage | ImageSource? | null | Artwork shown when the load fails. Ignored when `ErrorTemplate` is set |
+| LoadingTemplate | DataTemplate? | null | Replaces the ring entirely. `BindingContext` is the live `ImageLoadProgress` |
+| ErrorTemplate | DataTemplate? | null | Replaces the error artwork |
+| Aspect | Aspect | AspectFit | How the image scales. Applies to the placeholder too |
+| FadeInDuration | uint | 150 | Fade-in milliseconds once loaded. `0` shows it instantly |
+| RingSize | double | 48 | Diameter of the loading ring |
+| RingColor | Color? | null | Progress arc colour; null uses the theme `Primary` token |
+| RingTrackColor | Color? | null | Unfilled track; null uses `SurfaceContainerHighest` |
+| ProgressTextColor | Color? | null | Percentage label; null uses `OnSurface` |
+| ShowProgressText | bool | true | Draw the percentage inside the ring. Never shown when indeterminate |
+| CacheEnabled | bool | true | Whether this image participates in the memory and disk caches |
+| CacheDuration | TimeSpan? | null | Overrides `ImageOptions.DiskCacheDuration` for this image |
+| SvgTintColor | Color? | null | What `currentColor` resolves to in an SVG. Null draws it black. Ignored by rasters and by artwork with its own colours |
+| State | ImageLoadState | None | Read-only: `None`, `Queued`, `Downloading`, `Loaded`, `Failed` |
+| Progress | ImageLoadProgress | — | Read-only live snapshot; also the `LoadingTemplate` binding context |
+| IsLoading | bool | false | Read-only: true while `Queued` or `Downloading` |
+| LoadError | Exception? | null | Read-only: why the last load failed |
+| ImageLoadedCommand | ICommand? | null | Invoked with `ImageLoadedEventArgs` once on screen |
+| ImageFailedCommand | ICommand? | null | Invoked with the exception when a load fails |
+
+Events: `ImageLoaded` (`ImageLoadedEventArgs(Uri, Origin, ContentLength)`) and `ImageFailed` (`ImageFailedEventArgs(Uri, Error)`). Method: `ReloadAsync()` re-fetches, skipping both cache tiers.
+
+**These are named `ImageLoaded`/`ImageFailed`, not `Loaded`/`Failed`** — `VisualElement` already declares a `Loaded` event, and shadowing it would silently break anything relying on the base member. Never generate `Loaded="..."` expecting the image callback.
+
+### SVG
+
+SVG is drawn, not rasterized: one file is sharp at every size, and a single-colour icon is tinted per placement. Bind `Uri` exactly as for a raster — the control decides from the payload, so an endpoint that serves vectors from a URL that does not say so still works.
+
+```xml
+<!-- an embedded resource, tinted from the theme -->
+<shiny:ShinyImage Uri="resource://MyApp.Assets.logo.svg"
+                  SvgTintColor="{StaticResource Primary}"
+                  HeightRequest="48" />
+
+<!-- the same property for a file, a bundled asset, an inline data URI, or a URL -->
+<shiny:ShinyImage Uri="/var/mobile/.../chart.svg" />
+<shiny:ShinyImage Uri="art/logo.svg" />
+<shiny:ShinyImage Uri="https://cdn.example.com/logo.svg" />
+```
+
+**`resource://`** searches the app assembly, then the entry assembly, then everything loaded, matching the manifest resource name exactly and then by suffix — `resource://Assets.logo.svg` finds `MyApp.Assets.logo.svg`. Write `resource://MyLib/MyLib.Assets.logo.svg` to name the assembly outright. The name is taken verbatim, **not** parsed as a URI authority, because manifest resource names are case-sensitive.
+
+**Parsing is cached, not just the bytes.** `IImageService` already stops the same URL being downloaded twice, but turning bytes into geometry is an XML parse, a path-data parse per shape and a bounds measurement per shape — pure CPU on the UI thread, repeated per cell. Parsed documents are immutable and shared through an LRU `SvgCache` (`ImageOptions.SvgCacheEntryLimit`, default 32), so a hundred rows showing one icon parse it once. `SvgTintColor` resolves at draw time rather than being baked in, so placements that disagree about the colour still share a parse. `ReloadAsync()` drops the parse as well as the bytes.
+
+**`Aspect` wins over the file's `preserveAspectRatio` scaling**, so a vector and a raster in the same layout behave identically; the file's alignment (which corner the leftover space goes to) is still honoured.
+
+Supported: `path`, `rect`, `circle`, `ellipse`, `line`, `polyline`, `polygon`, `text`, `g`, `use`, `symbol`, `defs`, `switch`, `clipPath`, linear and radial gradients, presentation attributes, the `style` attribute, and type/class/id rules inside `<style>` (how Illustrator, Figma and Sketch export shared appearance). `.svgz` is decompressed transparently.
+
+Not supported — skipped rather than approximated, so an unsupported element costs that element only: filters, masks, patterns, markers, embedded raster `<image>`, SMIL and CSS animation, and external references of any kind (an image file never becomes a fetch). Gradient **strokes** fall back to their first stop, because `ICanvas` fills with a paint but strokes with a colour.
+
+Do not generate `SvgTintColor` on artwork that declares its own colours — it only affects `currentColor`.
+
+### Custom loading template
+
+```xml
+<shiny:ShinyImage Uri="{Binding PhotoUrl}" Aspect="AspectFill" HeightRequest="180">
+    <shiny:ShinyImage.LoadingTemplate>
+        <DataTemplate x:DataType="shiny:ImageLoadProgress">
+            <VerticalStackLayout Spacing="6" HorizontalOptions="Center" VerticalOptions="Center">
+                <Label Text="{Binding State}" FontAttributes="Bold" />
+                <shiny:ProgressBar Value="{Binding PercentDisplay}"
+                                   IsIndeterminate="{Binding IsIndeterminate}"
+                                   WidthRequest="160" />
+                <Label Text="{Binding BytesRead, StringFormat='{0:N0} bytes'}" FontSize="11" />
+            </VerticalStackLayout>
+        </DataTemplate>
+    </shiny:ShinyImage.LoadingTemplate>
+</shiny:ShinyImage>
+```
+
+`ImageLoadProgress` exposes `State`, `BytesRead`, `TotalBytes`, `Percent` (0-1 or null), `PercentDisplay` (0-100, or 0 when indeterminate) and `IsIndeterminate`. Setting a template re-points the host's `BindingContext` to the progress record, so bindings inside it resolve against progress, not the page view model.
+
+### ImageService
+
+```csharp
+builder.UseShinyControls(cfg => cfg
+    .ConfigureImages(o =>
+    {
+        o.MaxConcurrentDownloads = 4;                 // past this, requests report Queued
+        o.DiskCacheDuration      = TimeSpan.FromDays(7);
+        o.CacheDirectory         = null;              // null => <platform cache>/shinyimage
+        o.MaxDiskCacheBytes      = 100 * 1024 * 1024; // LRU-trimmed to 80% when exceeded
+        o.MemoryCacheEnabled     = true;
+        o.MaxMemoryCacheBytes    = 32 * 1024 * 1024;
+        o.MaxMemoryItemBytes     = 2 * 1024 * 1024;   // larger images stay disk-only
+        o.Timeout                = TimeSpan.FromSeconds(60);
+        o.ServeStaleOnError      = true;              // refresh failed? show the expired copy
+        o.SvgCacheEntryLimit     = 32;                // parsed SVG documents kept (0 disables)
+    })
+);
+```
+
+**How the disk cache decides.** An entry lives as long as the server's `Cache-Control: max-age` or
+`Expires` says, otherwise `DiskCacheDuration`. An expired entry is **revalidated, not thrown away**:
+the next request carries its `ETag` / `Last-Modified` as `If-None-Match` / `If-Modified-Since`, and a
+`304 Not Modified` extends the entry without downloading the image again. If the refresh fails
+(offline, timeout, 5xx), the stale copy is shown instead of the error artwork; set
+`ServeStaleOnError = false` to fail instead. A custom `IImageDownloader` can honour the same
+validators: send `request.IfNoneMatch` / `request.IfModifiedSince` and return
+`new ImageDownloadResult(Stream.Null, NotModified: true)` on a 304. One that ignores them still works
+and just re-downloads.
+
+**One request per URL.** Everything past the memory tier is shared per URI: a dozen cells asking for
+one avatar make one disk read, or one request (download or revalidation), and every cell gets its
+result and its progress. A forced reload (`ReloadAsync`) and an uncached image never share with a
+normal load.
+
+**Clock.** Expiry, last-access stamps and progress throttling read an injected `TimeProvider`.
+Register one in DI (`builder.Services.AddSingleton<TimeProvider>(...)`) to control it in tests; the
+default is `TimeProvider.System`.
+
+`IImageService` (inject it for cache management):
+
+| Member | Description |
+|---|---|
+| `GetAsync(ImageRequest, IProgress<ImageLoadProgress>?, CancellationToken)` | Memory → disk → network. Returns `ImageResult` — failures come back as `Success == false` with the exception attached, never as a throw |
+| `ClearCacheAsync(ct)` | Deletes every cached image, disk and memory |
+| `ClearCacheAsync(uri, ct)` | Deletes one entry |
+| `GetCacheSizeAsync(ct)` | Total bytes on disk |
+| `PrefetchAsync(uris, ct)` | Warms the cache for the next page of a list. Sequential, so speculative work cannot starve visible images |
+
+`ImageResult` carries `Success`, `Bytes` (when small enough to hold), `FilePath`, `ContentLength`, `Origin` (`Memory`/`Disk`/`Network`) and `Error`. `Origin` is the way to verify caching actually works in a demo or a test.
+
+### Custom downloader — the auth hook
+
+For authenticated images, replace `IImageDownloader`, **not** the whole service. Caching, queueing and de-duplication stay where they are.
+
+```csharp
+class AuthenticatedDownloader(HttpClient client, ITokenStore tokens) : IImageDownloader
+{
+    public async Task<ImageDownloadResult> DownloadAsync(ImageRequest request, CancellationToken ct)
+    {
+        var msg = new HttpRequestMessage(HttpMethod.Get, request.Uri);
+        msg.Headers.Authorization = new("Bearer", await tokens.GetAsync(ct));
+
+        var response = await client.SendAsync(msg, HttpCompletionOption.ResponseHeadersRead, ct);
+        response.EnsureSuccessStatusCode();
+
+        return new ImageDownloadResult(
+            await response.Content.ReadAsStreamAsync(ct),
+            response.Content.Headers.ContentLength,   // this is what makes the ring determinate
+            response.Content.Headers.ContentType?.MediaType
+        );
+    }
+}
+
+// builder.UseShinyControls(cfg => cfg.SetCustomImageDownloader<AuthenticatedDownloader>());
+```
+
+Return the body stream **unread** — the service pumps it and reports progress. To get cheap revalidation, forward `request.IfNoneMatch` / `request.IfModifiedSince` as headers and return `new ImageDownloadResult(Stream.Null, NotModified: true)` on a 304 (and pass `ETag` / `LastModified` on a 200). Use `HttpCompletionOption.ResponseHeadersRead` so `ContentLength` is known before the body arrives. `cfg.SetCustomImageService<T>()` replaces the whole pipeline, caching included; prefer the downloader hook unless you genuinely need your own cache.
+
+## Blazor
+
+```razor
+<ShinyImage Uri="@PhotoUrl"
+            PlaceholderUri="/images/placeholder.svg"
+            Alt="Profile photo"
+            ObjectFit="cover"
+            ImageLoaded="@(uri => status = "loaded")"
+            ImageFailed="@(msg => status = msg)" />
+```
+
+### Parameters (Blazor)
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| Uri | string? | null | The image to load |
+| PlaceholderUri | string? | null | Artwork shown before and during the load, behind the ring |
+| ErrorUri | string? | null | Artwork on failure. A built-in glyph is used when neither this nor `ErrorContent` is set |
+| Alt | string? | null | Alt text |
+| ObjectFit | string | "contain" | CSS `object-fit` |
+| FadeInDuration | int | 150 | Fade-in milliseconds |
+| LoadingContent | RenderFragment&lt;ImageLoadProgress&gt;? | null | Replaces the ring; `context` is the live progress |
+| ErrorContent | RenderFragment&lt;ImageLoadProgress&gt;? | null | Replaces the error artwork |
+| RingSize | double | 48 | Ring diameter in px |
+| ShowProgressText | bool | true | Percentage inside the ring |
+| RingColor / RingTrackColor / ProgressTextColor | string | theme vars | CSS colours, defaulting to `var(--shiny-color-*)` |
+| DisableProgress | bool | false | Skip the streamed fetch and let the browser load the URL directly |
+| ErrorGlyph | string | "🖼" | Glyph used when no error artwork is supplied |
+| CssClass | string? | null | Extra classes on the wrapper |
+| ImageLoaded / ImageFailed | EventCallback&lt;string?&gt; / EventCallback&lt;string&gt; | — | Completion callbacks |
+
+Method: `ReloadAsync()` re-fetches with a cache-busting parameter. Properties: `State`, `Progress`.
+
+### What Blazor does and does not do
+
+- **Progress, yes.** Remote images are streamed through `fetch` + `ReadableStream` so the ring shows a genuine percentage. No `<img>` element can report this — the DOM has no progress event for images.
+- **Disk caching: the browser's — on purpose.** Its HTTP cache is on disk, shared across tabs and sessions, and revalidates with ETag/Last-Modified itself. There is no `ClearCacheAsync` on Blazor because there is no cache of ours to clear.
+- **One fetch per URL, yes.** Images showing the same URL share one `fetch` (or one `IImageDownloader` call, per scope) and one ref-counted blob; a late joiner gets the in-flight progress or the finished blob. One image leaving never cancels a fetch others still wait on.
+- **Clock.** `ReloadAsync`'s cache-buster reads `TimeProvider` from DI when registered, else `TimeProvider.System`.
+- **CORS caveat.** A plain `<img>` may load a cross-origin image with no server cooperation; `fetch` may not. When the streamed load is blocked the component falls back to letting the browser load the URL directly — the image still appears, the ring just stays indeterminate. `DisableProgress="true"` takes that path deliberately.
+
+For authenticated images:
+
+```csharp
+builder.Services.AddShinyImages();                          // routes through the registered HttpClient
+builder.Services.AddShinyImages<AuthenticatedDownloader>(); // or your own IImageDownloader
+```
+
+The Blazor `IImageDownloader` returns `ImageDownloadResult(byte[] Bytes, string? ContentType)` and takes `(string uri, IProgress<ImageLoadProgress>?, CancellationToken)` — a different shape from the MAUI one, because the bytes have to end up in a blob URL rather than a file.
+
+## Gotchas
+
+- **`ImageLoaded`, not `Loaded`** (MAUI) — `VisualElement.Loaded` already exists.
+- **Do not cache `ImageSource` objects yourself.** A stream-backed `ImageSource` is consumed once and platform image handles are bound to the view that realized them, so sharing one across `CollectionView` cells renders blank. The memory tier caches encoded **bytes**; each control builds a fresh `ImageSource.FromStream(() => new MemoryStream(bytes))`, which is cheap.
+- A recycled cell raises `Unloaded` then `Loaded` again; the control cancels on the way out and restarts on the way back in. Cache hits make the retry nearly free — do not add your own reload logic for this.
+- Local files and bundled resources never touch the service. Passing `"photo.png"` to `Uri` loads it directly; there is no need to use `Source` for that.

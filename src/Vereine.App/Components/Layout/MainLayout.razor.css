@@ -1,0 +1,23 @@
+.seite {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.kopf {
+    position: sticky;
+    top: 0;
+    padding: calc(env(safe-area-inset-top) + 0.75rem) 1rem 0.75rem;
+    background: var(--primaer);
+    color: var(--auf-primaer);
+}
+
+.kopf-titel {
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+.inhalt {
+    flex: 1;
+    padding: 1.5rem 1rem calc(env(safe-area-inset-bottom) + 1.5rem);
+}

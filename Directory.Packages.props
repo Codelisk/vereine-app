@@ -1,0 +1,57 @@
+<Project>
+
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <!-- Indirekte Pakete, die unten eine Version tragen, gelten in dieser Version (Gruppe "Transitiv"). -->
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Version-Gruppen">
+    <!-- MAUI folgt dem Workload (dotnet workload list); fuer das RC3-SDK ist MAUI 11 RC2 die neueste Ausgabe. -->
+    <MauiVersion>11.0.0-rc.2.26505.5</MauiVersion>
+    <!-- Microsoft.Extensions und ASP.NET Core (Blazor) folgen dem SDK aus global.json -->
+    <AspNetCoreVersion>11.0.0-rc.3.26522.148</AspNetCoreVersion>
+    <ExtensionsVersion>11.0.0-rc.3.26522.148</ExtensionsVersion>
+    <ShinyVersion>6.5.0</ShinyVersion>
+    <ShinyMediatorVersion>6.12.0</ShinyMediatorVersion>
+    <!-- Nur Debug: Visual Tree, Screenshots, Logs und Blazor-CDP fuer Agenten (maui devflow, .config/dotnet-tools.json) -->
+    <DevFlowVersion>0.1.0-preview.13.26526.5</DevFlowVersion>
+  </PropertyGroup>
+
+  <ItemGroup Label="MAUI">
+    <PackageVersion Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="$(MauiVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Label="Shiny">
+    <PackageVersion Include="Shiny.Hosting.Maui" Version="$(ShinyVersion)" />
+    <PackageVersion Include="Shiny.Extensions.Configuration" Version="$(ShinyVersion)" />
+    <PackageVersion Include="Shiny.Mediator" Version="$(ShinyMediatorVersion)" />
+    <PackageVersion Include="Shiny.Mediator.Maui" Version="$(ShinyMediatorVersion)" />
+    <PackageVersion Include="Shiny.Mediator.Blazor" Version="$(ShinyMediatorVersion)" />
+  </ItemGroup>
+
+  <!-- MAUI 11 RC2 bringt Blazor und Microsoft.Extensions als RC1 mit, Shiny Mediator Teile als 10.0. Gehoben auf den
+       SDK-Stand, damit Laufzeit, Trimmer und NativeAOT-Compiler zu denselben Bibliotheken passen. -->
+  <ItemGroup Label="Transitiv">
+    <PackageVersion Include="Microsoft.AspNetCore.Components" Version="$(AspNetCoreVersion)" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.Web" Version="$(AspNetCoreVersion)" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.WebView" Version="$(AspNetCoreVersion)" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="$(AspNetCoreVersion)" />
+    <PackageVersion Include="Microsoft.JSInterop" Version="$(AspNetCoreVersion)" />
+    <PackageVersion Include="Microsoft.JSInterop.WebAssembly" Version="$(AspNetCoreVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="$(ExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="$(ExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="$(ExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="$(ExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="$(ExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="$(ExtensionsVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Label="Debug">
+    <PackageVersion Include="Microsoft.Extensions.Logging.Debug" Version="$(ExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Maui.DevFlow.Agent" Version="$(DevFlowVersion)" />
+    <PackageVersion Include="Microsoft.Maui.DevFlow.Blazor" Version="$(DevFlowVersion)" />
+  </ItemGroup>
+
+</Project>

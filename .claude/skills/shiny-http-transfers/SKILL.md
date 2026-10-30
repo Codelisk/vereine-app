@@ -1,0 +1,321 @@
+---
+name: shiny-http-transfers
+description: Guide for generating code that uses Shiny.NET HTTP Transfers for background uploads and downloads on iOS/Android, Windows, Linux, macOS, and Blazor WASM (Service Worker Background Sync), including transfer progress surfaces - iOS Live Activities and the Android foreground-service notification
+auto_invoke: true
+triggers:
+  - http transfer
+  - background upload
+  - background download
+  - file upload
+  - file download
+  - transfer manager
+  - HttpTransferManager
+  - IHttpTransferManager
+  - IHttpTransferDelegate
+  - HttpTransferRequest
+  - HttpTransferMonitor
+  - Shiny.Net.Http
+  - AddBlazorHttpTransfers
+  - BrowserHttpTransferManager
+  - BlazorHttpTransferOptions
+  - azure blob upload
+  - aws s3 upload
+  - s3 upload
+  - AwsS3UploadRequest
+  - tus
+  - tus upload
+  - resumable upload
+  - TusUploadRequest
+  - UploadTus
+  - multipart upload
+  - download file
+  - upload file
+  - transfer progress
+  - pause transfer
+  - resume transfer
+  - pause download
+  - resume download
+  - AddTransferProgress
+  - TransferProgressManager
+  - TransferProgressOptions
+  - TransferProgressFields
+  - TransferProgressShortStatus
+  - TransferProgressScope
+  - TransferProgressSnapshot
+  - TransferProgressContent
+  - TransferProgressContentBuilder
+  - TransferProgressBar
+  - ITransferProgressRenderer
+  - ITransferProgressDelegate
+  - ForegroundNotificationRenderer
+  - transfer live activity
+  - transfer notification progress
+  - upload progress notification
+  - download progress notification
+  - lock screen transfer progress
+---
+
+# Shiny HTTP Transfers
+
+Background HTTP upload and download management. On iOS, backed by native `NSURLSession` background sessions. On Android, Windows, Linux, macOS, and base .NET, backed by an in-process managed loop using `HttpClient` + `IConnectivity` that wakes on connectivity changes and supports **resumable downloads** via HTTP Range requests (uploads always restart); on Android this loop runs inside a foreground service. On Blazor WASM, backed by the Service Worker Background Sync API (IndexedDB queue drained by the SW via `fetch()` while the tab is closed).
+
+## When to Use This Skill
+
+Use this skill when the user needs to:
+
+- Upload or download files in the background on iOS/Android
+- Monitor progress of HTTP file transfers
+- Queue background transfers that survive app suspension
+- Handle transfer errors with automatic retry logic
+- Upload files to Azure Blob Storage
+- Upload files to AWS S3
+- Build a UI that tracks active transfers with progress reporting
+- Perform multipart or raw file uploads
+- Download files with progress tracking and estimated time remaining
+
+## Library Overview
+
+| Item        | Value                                                                                   |
+|-------------|-----------------------------------------------------------------------------------------|
+| NuGet       | `Shiny.Net.Http` (one package everywhere - its `net10.0` build includes Blazor WASM)    |
+| Namespace   | `Shiny.Net.Http`                                                                        |
+| Platforms   | iOS, tvOS (native NSURLSession); Android, Windows, Linux, macOS, .NET base (managed HttpClient loop); Blazor WASM (Service Worker) |
+| DI Setup    | `services.AddHttpTransfers<TDelegate>()` (iOS/tvOS/Android/Windows), `services.AddHttpClientTransfers<TDelegate>()` (Linux/macOS/plain .NET), or `services.AddBlazorHttpTransfers<TDelegate>()` (Blazor) |
+
+The registration extension methods live in the `Shiny` namespace and are available on `IServiceCollection`.
+
+**tvOS** uses `services.AddHttpTransfers<TDelegate>()` and the same background `NSUrlSession` as iOS, so transfers continue while the app is suspended. Storage is the difference worth calling out: an Apple TV has no user-visible file system and a small, evictable app container — write transfer output to the cache directory and treat a completed download as something the OS may reclaim between launches.
+
+## Setup
+
+### 1. Register Services
+
+In your `MauiProgram.cs`:
+
+```csharp
+using Shiny;
+
+builder.Services.AddHttpTransfers<MyHttpTransferDelegate>();
+```
+
+### 2. Implement the Delegate
+
+Create a class that implements `IHttpTransferDelegate` (or inherits from the abstract `HttpTransferDelegate` base class for built-in retry logic):
+
+```csharp
+using Shiny.Net.Http;
+
+public class MyHttpTransferDelegate : HttpTransferDelegate
+{
+    public MyHttpTransferDelegate(
+        ILogger<MyHttpTransferDelegate> logger,
+        IHttpTransferManager manager
+    ) : base(logger, manager, maxErrorRetries: 3) { }
+
+    public override Task OnCompleted(HttpTransferRequest request)
+    {
+        // Handle successful transfer completion
+        return Task.CompletedTask;
+    }
+
+    // Optional: override for 401 handling
+    protected override Task<HttpTransferRequest?> OnAuthorizationFailed(
+        HttpTransferRequest request, int retries)
+    {
+        // Return a new request with refreshed auth headers, or null to cancel
+        return Task.FromResult<HttpTransferRequest?>(null);
+    }
+}
+```
+
+On Android, the delegate must also implement `IAndroidForegroundServiceDelegate`:
+
+```csharp
+#if ANDROID
+public partial class MyHttpTransferDelegate : IAndroidForegroundServiceDelegate
+{
+    public void Configure(AndroidX.Core.App.NotificationCompat.Builder builder)
+    {
+        builder
+            .SetContentTitle("File Transfer")
+            .SetContentText("Transferring files in the background");
+    }
+}
+#endif
+```
+
+### Linux / macOS / Plain .NET Setup
+
+On non-platform .NET hosts (Linux, macOS server, console apps, etc.) call `AddHttpClientTransfers<TDelegate>()` instead of `AddHttpTransfers<TDelegate>()`. It registers `HttpClientHttpTransferManager` backed by an `HttpClient` loop driven by `IConnectivity` that wakes immediately on connectivity changes. Downloads resume after network interruption via HTTP Range requests (`Range: bytes=N-`, `FileMode.Append` when the server responds with `206 Partial Content`); uploads always restart from scratch.
+
+The managed loop resolves its `HttpClient` from `IHttpClientFactory` using the named client `HttpClientHttpTransferProcess.HttpClientName` (`"Shiny.Net.Http"`). To customize it (timeouts, default headers, a custom primary handler, Polly, etc.), configure that named client after registering transfers: `services.AddHttpClient("Shiny.Net.Http").ConfigureHttpClient(c => c.Timeout = TimeSpan.FromMinutes(10));`. (iOS/Mac Catalyst use `NSUrlSession` and ignore this.)
+
+`IConnectivity` is registered for you (`AddConnectivity()` from `Shiny.Core` - register your own first to replace it). A default JSON filesystem repository is registered automatically and persists transfer state to `{LocalApplicationData}/Shiny` across process restarts.
+
+Cancelled downloads clean up any partial file on disk so a subsequent re-queue starts fresh.
+
+### Blazor WASM Setup (`Shiny.Net.Http`)
+
+```csharp
+using Shiny;
+
+builder.Services.AddBlazorHttpTransfers<MyDelegate>(opts =>
+{
+    opts.ServiceWorkerPath = "./_content/Shiny.Net.Http/http-transfer-sw.js";
+});
+```
+
+`AddBlazorHttpTransfers` ships in `Shiny.Net.Http`'s `net10.0` build - never reference `Shiny.Net.Http.Blazor`, which was merged into `Shiny.Net.Http` in v6. It uses the Service Worker Background Sync API. Queued transfers are written to IndexedDB; the Service Worker's `sync` event handler drains the queue via `fetch()` and stores download bodies as `Blob`s back into IndexedDB. When the tab reopens, the C# `BrowserHttpTransferManager` reconciles results from IndexedDB and fires the `IHttpTransferDelegate` callbacks.
+
+Ship the bundled SW file or import its handlers from your own service worker:
+
+```js
+// my-sw.js
+importScripts('./_content/Shiny.Net.Http/http-transfer-sw.js');
+```
+
+**Blazor limitations (v1)**:
+
+- **No resumable downloads** — the SW receives a whole response `Blob`; partial-body appending is not supported.
+- **Pause/Resume is best-effort** — `Pause(identifier)` marks the IndexedDB entry `paused` so the SW drain skips it (it only processes `pending`/`error`), and `Resume(identifier)` re-queues it. An already in-flight SW `fetch()` cannot be aborted (no `AbortController` wiring), so it runs to completion; and because downloads aren't resumable, a resumed download restarts from zero. Pausing a not-yet-started (or retry-pending) transfer works cleanly.
+- **Upload bodies are base64-bridged through JS interop** and persisted as IndexedDB `Blob`s. Fine for small/medium files; very large uploads should wait for a future OPFS streaming path.
+- **Browser support for Background Sync is Chromium-only** (no Firefox, no Safari). On unsupported browsers queued transfers drain while the tab is foreground and then sit in IndexedDB until next visit.
+- **Retrieving completed downloads**: use `(manager as Shiny.Net.Http.BrowserHttpTransferManager).GetDownloadBytes(identifier)` which reads the blob back out of IndexedDB as a `byte[]`.
+
+**Do not confuse with `Shiny.Jobs` on Blazor** — Jobs only run while the tab is open because the WASM runtime cannot execute inside a Service Worker. HTTP transfers are the one exception because `fetch()` is pure JS that the SW can run on its own.
+
+## Code Generation Instructions
+
+When generating code that uses Shiny HTTP Transfers, follow these conventions:
+
+### Queuing Transfers
+
+- Always use `IHttpTransferManager` via dependency injection; never instantiate directly.
+- `HttpTransferRequest` requires 4 positional parameters: `Identifier`, `Uri`, `TransferType`, `LocalFilePath`:
+  ```csharp
+  var request = new HttpTransferRequest(
+      "my-download",
+      "https://example.com/file.zip",
+      TransferType.Download,
+      Path.Combine(FileSystem.AppDataDirectory, "file.zip")
+  );
+  await transferManager.Queue(request);
+  ```
+- Use a unique `Identifier` for each `HttpTransferRequest` so individual transfers can be tracked and cancelled.
+- For uploads, ensure the `LocalFilePath` points to an existing file before queuing.
+- Set `UseMeteredConnection = false` to restrict large transfers to Wi-Fi only.
+- Choose the correct `TransferType`: `UploadMultipart` for form-based uploads, `UploadRaw` for streaming the file body directly, `Download` for downloads.
+
+### Monitoring Progress
+
+- Subscribe to the `UpdateReceived` C# event on `IHttpTransferManager` for a global stream of all transfer updates (`event EventHandler<HttpTransferResult>`). Rx has been removed from `Shiny.Net.Http`; remember to `-=` your handler when done.
+- Subscribe to the `CountChanged` event (`event EventHandler<int>`) to react to the number of active transfers.
+- Use the `WatchTransfer(identifier)` extension method to `await` a single transfer to completion — it returns `Task<HttpTransferResult>` and unsubscribes from `UpdateReceived` internally.
+- For UI binding, use `HttpTransferMonitor` -- call `Start()` to begin monitoring and bind to the `Transfers` collection of `HttpTransferObject` items. These implement `INotifyPropertyChanged`.
+
+### Pausing & Resuming
+
+- Call `transferManager.Pause(identifier)` to stop a transfer **without cancelling it**. The transfer stays in the queue and reports `HttpTransferState.Paused`. Use this instead of `Cancel(identifier)` (which removes the transfer and deletes a download's partial file) when the user may want to continue later.
+- Call `transferManager.Resume(identifier)` to continue a paused transfer. **Downloads** resume from where they left off (HTTP Range on managed platforms; native `NSUrlSessionTask.Resume()` on iOS/Mac Catalyst). **Uploads** are not resumable — resuming an upload restarts it from the beginning — **except tus uploads** (`TransferType.UploadTus`), which continue from the offset the server reports.
+- A user-paused transfer is not auto-resumed when the app relaunches or when connectivity returns; it stays paused until you call `Resume`.
+
+### Building Requests
+
+- Use `TransferHttpContent.FromJson(obj, MyJsonContext.Default.MyType)` to attach a JSON body to an upload - it is trim/AOT safe. The `FromJson(object, JsonSerializerOptions?)` overload serializes by reflection and is marked `[RequiresUnreferencedCode]`; only use it where the app is not trimmed.
+- Use `TransferHttpContent.FromFormData(...)` to attach form-encoded data.
+- Use `AzureBlobStorageUploadRequest` for Azure Blob Storage uploads -- call `.WithBlobContainer(tenant, container)` or `.WithCustomUri(uri)`, configure auth via `.WithSasToken()` or `.WithSharedKeyAuthorization()`, then call `.Build()` to get an `HttpTransferRequest`.
+- Use `AwsS3UploadRequest` for AWS S3 uploads -- call `.WithBucket(bucket, region)`, configure auth via `.WithPresignedUrl()` or `.WithCredentials(accessKeyId, secretAccessKey)`, optionally set `.WithObjectKey()`, `.WithContentType()`, `.WithStorageClass()`, then call `.Build()` to get an `HttpTransferRequest`. Uses AWS Signature V4 signing with `UNSIGNED-PAYLOAD` -- no AWS SDK required.
+- Use `TusUploadRequest` for **resumable uploads** to a tus server -- `.WithEndpoint(creationUri)`, optionally `.WithMetadata(key, value)`, `.WithBearerToken(token)` / `.WithHeader(...)`, `.WithChunkSize(bytes)`, then `.Build()`. Queue it like any transfer; no extra registration. Pauses, network drops and app restarts resume from the server's `Upload-Offset` (a dropped connection reports `PausedByNoNetwork`, not an error). Don't set `HttpContent` on a tus request (it throws) -- send values as metadata. Not supported on Blazor WASM. On iOS each chunk is a background upload task copied to a temp file, so recommend `WithChunkSize` for very large files. Prefer tus over `UploadRaw`/`UploadMultipart` whenever the server supports it and files are large or connections unreliable.
+- Use `AppleHttpTransferRequest` (inherits `HttpTransferRequest`) when Apple-specific options are needed (e.g., `AllowsConstrainedNetworkAccess`, `AllowsCellularAccess`, `AssumesHttp3Capable`).
+
+### Foreground (Non-Background) Transfers
+
+- For transfers that only need to run while the app is in the foreground, use the `HttpClient` extension methods `Upload(...)` and `Download(...)`. They return `Task` and accept an optional `Action<TransferProgress> onProgress` callback for real-time progress reporting (Rx removed).
+
+### Platform Configuration (Apple)
+
+- Optionally register an `INativeConfigurator` implementation to customize `NSUrlSessionConfiguration` and `NSMutableUrlRequest` objects before they are sent.
+
+## Transfer progress surfaces (Live Activity / notification)
+
+Showing progress to a user who has left the app is one call. Do **not** hand-roll this from
+`UpdateReceived`.
+
+```csharp
+builder.Services.AddHttpTransfers<MyTransferDelegate>();
+builder.Services.AddTransferProgress(opts =>
+{
+    opts.Scope       = TransferProgressScope.Summary;      // one surface for all (default), or PerTransfer
+    opts.Fields      = TransferProgressFields.Default;     // file, direction, %, bytes, speed, ETA
+    opts.ShortStatus = TransferProgressShortStatus.Percent; // Dynamic Island / status bar chip
+});
+```
+
+`TransferProgressManager` is one manager for every platform: it subscribes at startup (`IShinyStartupTask`,
+because iOS relaunches the app in the background to finish a transfer), coalesces the progress firehose to
+one update a second, aggregates a batch, and starts/updates/retires the surface. Renderers only draw.
+
+| Platform | Surface |
+|---|---|
+| Android 16+ | The foreground-service notification, promoted ongoing (status bar chip, AOD) |
+| Android 8-15 | The foreground-service notification with a determinate bar |
+| iOS/iPadOS 16.2+ | A Live Activity on the Lock Screen and in the Dynamic Island |
+| Elsewhere (macOS, Mac Catalyst, tvOS, Windows, Linux, Blazor) | No renderer; the manager no-ops |
+
+Both renderers ship **inside `Shiny.Net.Http`** - there is no second package and no second registration
+call. On iOS the package pulls `Shiny.Mobile.LiveActivities` for you (that reference is on the `-ios` target
+only, so no other head carries ActivityKit) and `AddTransferProgress()` registers `ILiveActivityManager`
+itself if you have not already called `AddLiveActivities()`. When the app also uses Live Activities
+directly, generate `AddLiveActivities(...)` **before** `AddTransferProgress()` - called after, it registers a
+second manager with its own ActivityKit observers.
+
+iOS additionally needs a widget extension in the app bundle and `NSSupportsLiveActivities` in Info.plist.
+Generate `<ShinyLiveActivityWidget>true</ShinyLiveActivityWidget>` in the app's `.csproj` (iOS-conditioned
+`PropertyGroup`) - `Shiny.Mobile.LiveActivities` then builds the stock widget and adds the key, with no Xcode
+project. Without it the activity starts and renders nothing - a silent failure, so check this first when an iOS
+activity never appears. See the `shiny-liveactivities` skill for signing details.
+
+The two iOS-only knobs live on the same options object:
+
+```csharp
+builder.Services.AddTransferProgress(opts =>
+{
+    opts.LiveActivity.Kind             = "shiny.httptransfers";  // your widget branches on this
+    opts.LiveActivity.RequestPushToken = true;                   // see "the iOS suspension gap" below
+});
+```
+
+**Configuring what shows.** `Fields` is a `[Flags]` enum (`FileName`, `Direction`, `Percent`,
+`TransferredBytes`, `Speed`, `TimeRemaining`, `Host`) gating the human-readable text only; unselected fields
+are simply not written. Raw values (`bytes`, `total`, `percent`, `bps`, `etaSeconds`, `state`, `direction`,
+`transferId`, `fileName`, `uri`) always ride in `TransferProgressContent.Data` unless `IncludeRawData =
+false`. Percent is omitted from the body when it is already the `ShortStatus`, so it never prints twice.
+
+For custom wording or localization, subclass `TransferProgressDelegate` and override only what you need
+(returning null keeps the built-in string), then register with `AddTransferProgress<TDelegate>()`.
+
+**The iOS suspension gap.** A background `NSURLSession` delivers no progress callbacks while the app is
+suspended, so a fraction-based bar freezes for most of a long transfer. `ProjectTimeRemaining` (default on)
+emits a self-animating time range instead, anchored in the past so the bar already sits at the true fraction
+rather than snapping to zero on every update. Android resolves the range back to a fraction - its foreground
+service is alive throughout. For uploads, `opts.LiveActivity.RequestPushToken` lets a server push
+byte-accurate progress through the suspended window - the receiving server knows how many bytes actually
+landed. It buys nothing for downloads, where no server knows how far the device has got. The token arrives
+on `ILiveActivityDelegate.OnPushTokenChanged`.
+
+**Custom renderers.** Implement `ITransferProgressRenderer` (`IsAvailable`, `Show`, `Hide`, `Reconcile`) and
+register it; the same manager drives it. `TransferProgressContentBuilder.FormatBytes/FormatRate/
+FormatDuration/FormatPercent` are public statics, reusable in ordinary in-app progress UI.
+
+## Best Practices
+
+1. **Use the abstract base class** -- `HttpTransferDelegate` provides built-in retry and 401-handling logic. Only implement `IHttpTransferDelegate` directly if you need full control.
+2. **Validate before queuing** -- Call `request.AssertValid()` to check the request is well-formed before calling `Queue()`.
+3. **Observe on the main thread** -- When binding `HttpTransferMonitor` to UI, pass a `SynchronizationContext` to `Start()` so collection mutations marshal to the UI thread.
+4. **Clean up the monitor** -- `HttpTransferMonitor` implements `IDisposable`. Dispose it when the page or view model is torn down.
+5. **Handle metered connections** -- Set `UseMeteredConnection = false` for large files so the system waits for an unmetered (Wi-Fi) connection.
+6. **Unique identifiers** -- Always provide meaningful, unique identifiers for transfers so they can be individually tracked, cancelled, and retried.
+
+## Reference Files
+
+- [API Reference](reference/api-reference.md)

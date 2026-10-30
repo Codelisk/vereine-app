@@ -1,0 +1,26 @@
+{
+  "enableAllProjectMcpServers": false,
+  "enabledMcpjsonServers": [
+    "microsoft-learn",
+    "context7"
+  ],
+  "permissions": {
+    "allow": [
+      "Bash(dotnet build:*)",
+      "Bash(dotnet publish:*)",
+      "Bash(dotnet test:*)",
+      "Bash(dotnet restore:*)",
+      "Bash(dotnet format:*)",
+      "Bash(dotnet list:*)",
+      "Bash(dotnet tool restore)",
+      "Bash(dotnet tool run maui:*)",
+      "Bash(dotnet maui:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git branch:*)"
+    ],
+    "deny": []
+  }
+}

@@ -1,0 +1,44 @@
+# Build-Output (UseArtifactsOutput buendelt alles unter artifacts/)
+artifacts/
+bin/
+obj/
+*.binlog
+
+# IDE
+.vs/
+.idea/
+.vscode/
+*.user
+*.suo
+
+# Test / Coverage
+TestResults/
+*.trx
+coverage*.json
+coverage*.xml
+*.coverage
+
+# Lokales
+*.local.json
+.claude/settings.local.json
+.claude/worktrees/
+.claude/scheduled_tasks.lock
+launchSettings.local.json
+.env
+.env.*
+
+# Signierung: Keystores und Profile gehoeren nie ins Repo
+*.keystore
+*.jks
+*.p12
+*.mobileprovision
+
+# MAUI DevFlow (Laufzeitdaten des Agenten)
+.mauidevflow
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Claude-Arbeitsdateien gehoeren nie ins Repo
+tmpclaude-*

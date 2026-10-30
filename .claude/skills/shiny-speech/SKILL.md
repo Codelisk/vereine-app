@@ -1,0 +1,1285 @@
+---
+name: shiny-speech
+description: Generate code using Shiny.Speech for cross-platform speech-to-text, text-to-speech, audio capture, and audio playback with pluggable cloud providers
+auto_invoke: true
+triggers:
+  - speech to text
+  - text to speech
+  - speech recognition
+  - voice recognition
+  - tts
+  - stt
+  - speak
+  - dictation
+  - transcribe
+  - synthesize speech
+  - audio capture
+  - audio playback
+  - microphone
+  - ISpeechToTextService
+  - ITextToSpeechService
+  - SpeechTone
+  - SpeechEmotion
+  - SpeechAnnotations
+  - SpeechAnnotationHandling
+  - SpeechToneCapabilities
+  - audio tags
+  - emotion
+  - emotional tts
+  - expressive speech
+  - speech tone
+  - eleven v3
+  - emotion_preset
+  - express-as
+  - IAudioSource
+  - IAudioPlayer
+  - IAudioPlayback
+  - concurrent playback
+  - overlapping audio
+  - StartAsync
+  - IAudio
+  - IAudioMonitor
+  - IAudioDevices
+  - IAudioDuplex
+  - IAudioDuplexSession
+  - AudioDuplexOptions
+  - AddAudioDuplex
+  - full duplex audio
+  - InputDeviceChanged
+  - call microphone selection
+  - voice call audio
+  - echo cancellation playback
+  - jitter buffer
+  - IAudioRecorder
+  - AudioEffectChain
+  - IAudioEffect
+  - AudioCaptureOptions
+  - AudioRecordingOptions
+  - AudioRecordMode
+  - AudioEffectPresets
+  - PitchShiftEffect
+  - EchoEffect
+  - ReverbEffect
+  - ChorusEffect
+  - DistortionEffect
+  - RingModEffect
+  - BiquadFilterEffect
+  - NoiseGateEffect
+  - GainEffect
+  - AudioEffectProcessor
+  - WavWriter
+  - WavReader
+  - audio effects
+  - voice changer
+  - pitch shift
+  - echo
+  - reverb
+  - robot voice
+  - record audio
+  - record to wav
+  - save recording
+  - AudioDevice
+  - AudioMonitorOptions
+  - microphone monitor
+  - mic passthrough
+  - live monitoring
+  - PA
+  - megaphone
+  - talk over bluetooth speaker
+  - audio route
+  - output device
+  - input device
+  - device selection
+  - AudioDeviceType
+  - AudioDeviceExtensions
+  - wired headphones
+  - headphone jack
+  - headset detection
+  - headphones connected
+  - IsWired
+  - IsBluetooth
+  - IsHeadphones
+  - AddAudioMonitor
+  - AddAudioDevices
+  - SetInputDevice
+  - SetOutputDevice
+  - InputLevelChanged
+  - ISpeechToTextProvider
+  - ITextToSpeechProvider
+  - SpeechRecognitionResult
+  - SpeechRecognitionOptions
+  - SpeechRecognitionError
+  - TextToSpeechOptions
+  - VoiceInfo
+  - AccessState
+  - ResultReceived
+  - KeywordHeard
+  - StatementAfterKeyword
+  - WaitListenForKeywords
+  - ListenForKeywords
+  - ListenUntilSilence
+  - SpeakAsync
+  - GetVoicesAsync
+  - StartCaptureAsync
+  - StopCaptureAsync
+  - AudioProcessingOptions
+  - noise suppression
+  - background noise
+  - echo cancellation
+  - acoustic echo cancellation
+  - AEC
+  - automatic gain control
+  - AGC
+  - voice processing
+  - barge-in
+  - EchoCancellation
+  - NoiseSuppression
+  - AutomaticGainControl
+  - AddSpeechServices
+  - AddSpeechToText
+  - AddTextToSpeech
+  - AddAudioServices
+  - AddAudioSource
+  - AddAudioPlayer
+  - AddCloudSpeechToText
+  - AddCloudTextToSpeech
+  - AddAzureSpeech
+  - AddElevenLabsTextToSpeech
+  - AddElevenLabsSpeechToText
+  - AddElevenLabsSpeech
+  - ElevenLabsSpeechToTextProvider
+  - Scribe
+  - scribe_v1
+  - AzureSpeechConfig
+  - ElevenLabsConfig
+  - AddTypecastSpeech
+  - AddTypecastTextToSpeech
+  - Typecast
+  - TypecastConfig
+  - TypecastTextToSpeechProvider
+  - CloudSpeechToText
+  - CloudTextToSpeech
+  - Shiny.Speech
+  - Shiny.Audio
+  - Shiny.Core
+  - Shiny.Hosting.Maui
+  - UseShiny
+  - AndroidPlatform
+  - Shiny.Speech.Cloud
+  - Shiny.Speech.Azure
+  - Shiny.Speech.ElevenLabs
+  - Shiny.Speech.Typecast
+  - PipeStream
+  - IsListening
+  - IsSpeaking
+  - AudioLevelChanged
+  - IsPlayerAnalysisSupported
+  - InputLevelChanged
+  - IsInputAnalysisSupported
+  - AudioLevel
+  - VU meter
+  - mic level
+  - input level
+  - audio level
+  - Volume
+  - set volume
+  - read volume
+  - VolumeChanged
+  - IsVolumeControlSupported
+  - system volume
+  - media volume
+  - wake word
+  - keyword detection
+  - hey siri
+  - voice activation
+  - blazor speech
+  - blazor wasm speech
+  - browser speech
+  - webassembly speech
+  - web speech api
+  - BrowserSpeechToTextService
+  - BrowserTextToSpeechService
+  - BrowserAudioPlayer
+  - BrowserAudioSource
+  - OperatingSystem.IsBrowser
+  - linux
+  - linux audio
+  - linux speech
+  - linux microphone
+  - alsa
+  - pulseaudio
+  - pipewire
+  - raspberry pi
+  - headless audio
+  - Shiny.Audio.Linux
+  - AddLinuxAudio
+  - LinuxAudioSource
+  - LinuxAudioPlayer
+  - LinuxAudioDevices
+  - LinuxAudioMonitor
+  - IsLinuxAudioAvailable
+  - OperatingSystem.IsLinux
+  - whisper
+  - whisper.cpp
+  - Whisper.net
+  - offline speech recognition
+  - offline stt
+  - on-device speech recognition
+  - local speech to text
+  - no cloud speech
+  - air-gapped
+  - Shiny.Speech.Linux.Whisper
+  - AddLinuxWhisperSpeechToText
+  - WhisperConfig
+  - WhisperSpeechToTextProvider
+  - WhisperModelResolver
+  - GgmlType
+  - QuantizationType
+  - ggml model
+---
+
+# Shiny Speech Skill
+
+You are an expert in Shiny Speech, a library that provides cross-platform speech-to-text, text-to-speech, audio capture, and audio playback for .NET MAUI and Blazor WebAssembly with pluggable cloud providers.
+
+## When to Use This Skill
+
+Invoke this skill when the user wants to:
+- Add speech-to-text (STT) or text-to-speech (TTS) to a .NET MAUI app
+- Capture audio from the device microphone
+- Play audio streams on the device
+- Use Azure AI Speech for cloud-based STT/TTS
+- Use ElevenLabs for cloud-based TTS
+- Implement a custom cloud speech provider
+- Configure speech recognition options (language, silence timeout, on-device preference, keywords)
+- Configure text-to-speech options (voice, rate, pitch, volume)
+- Add emotion / tone / expressive delivery to synthesized speech
+- Use ElevenLabs v3 audio tags (`[excited]`, `[whispers]`) or Typecast emotion presets
+- Strip or normalize bracketed audio tags so they aren't spoken aloud
+- List available TTS voices
+- Start/stop continuous speech recognition with event-based results
+- Implement listen-until-silence dictation
+- Implement wake word / keyword activation ("Hey Siri" style)
+- Implement keyword listening (listen until a specific keyword is detected)
+- Listen for keywords continuously as an async stream
+- Add speech-to-text or text-to-speech to a Blazor WebAssembly app
+- Use the Web Speech API via Shiny.Speech in the browser
+
+## Library Overview
+
+**GitHub**: https://github.com/shinyorg/speech
+**NuGet Packages**:
+- `Shiny.Speech` — Core library with platform-native STT, TTS, audio capture, and playback
+- `Shiny.Speech.Cloud` — Cloud provider abstractions
+- `Shiny.Speech.Azure` — Azure AI Speech provider
+- `Shiny.Speech.ElevenLabs` — ElevenLabs TTS provider
+- `Shiny.Speech.Typecast` — Typecast TTS provider (TTS only, via the `typecast-csharp` SDK)
+- `Shiny.Audio.Linux` — Linux audio backend (PulseAudio/PipeWire with ALSA fallback). Required on Linux; nothing else registers audio services there
+- `Shiny.Speech.Linux.Whisper` — On-device, offline STT on Linux via Whisper/whisper.cpp. STT only (there is no Whisper TTS)
+
+**Namespace**: `Shiny.Speech`
+
+Shiny Speech provides:
+- Platform-native speech-to-text via `ISpeechToTextService` (iOS, Android, Windows, Browser/WASM)
+- Event-based recognition model — `ResultReceived`, `KeywordHeard`, `Error` events allow multiple subscribers
+- Start/Stop lifecycle — call `Start()` to begin listening, `Stop()` to end; `Start()` throws if already listening
+- Built-in keyword detection — set `Keywords` in `SpeechRecognitionOptions` and subscribe to `KeywordHeard`
+- Platform-native text-to-speech via `ITextToSpeechService` (iOS, Android, Windows, Browser/WASM)
+- Platform-native audio capture via `IAudioSource` (raw PCM 16kHz, 16-bit, mono — all platforms including browser) with an `InputLevelChanged` VU signal on every platform
+- Platform-native audio playback via `IAudioPlayer` — play a `Stream`, or a remote URL / local file path via `PlayAsync(string)` (platform resolves the source natively; browser uses HTML5 Audio)
+- Concurrent playback — clips overlap instead of interrupting each other; `StartAsync` returns an `IAudioPlayback` handle (`Id`, `Source`, `IsPlaying`, `Completion`, `StopAsync()`) that stops one clip on its own, `IAudioPlayer.Active` lists what is playing, and `IAudioPlayer.StopAsync()` stops everything
+- Live microphone monitor via `IAudioMonitor` — routes the mic to the current output in near-real-time (PA / "talk over a Bluetooth speaker"); `Start`/`Stop`, adjustable `Gain`, `InputLevelChanged` VU signal, `AudioMonitorOptions` (voice processing + preferred devices), `SetInputDevice`/`SetOutputDevice`. iOS/Mac Catalyst + Android + Linux only
+- Audio route enumeration/selection via `IAudioDevices` — `GetInputs`/`GetOutputs`, `CurrentInput`/`CurrentOutput`, `Changed` event; normalized `AudioDevice.Type`. iOS/Mac Catalyst + Android + Linux only (`Changed` needs PulseAudio/PipeWire; `ShowOutputPicker()` is a no-op on Linux)
+- Linux support via the separate `Shiny.Audio.Linux` package — all four audio services over PulseAudio/PipeWire with an ALSA fallback. **No native STT/TTS exists on Linux** (there is no OS speech engine to wrap); use a cloud provider, or `Shiny.Speech.Linux.Whisper` for offline STT
+- On-device offline STT on Linux via the separate `Shiny.Speech.Linux.Whisper` package — Whisper through whisper.cpp, no cloud account or network. STT only
+- Route classification via `AudioDeviceExtensions` — `IsWired()`, `IsBluetooth()`, `IsBuiltIn()`, `IsHeadphones()`, `HasMicrophone()` on both `AudioDevice` and `AudioDeviceType`; detects wired/jack/USB-C headphones and headsets alongside Bluetooth
+- Full-duplex call audio via `IAudioDuplex` — echo-cancelled mic frames (`IAudioDuplexSession.Captured`, a `ChannelReader<ReadOnlyMemory<byte>>` of 20 ms PCM16 mono frames) plus live network PCM playback (`Play(ReadOnlySpan<byte>)`, jitter-buffered) on **one** voice-processing session, live `Speakerphone` switching, live microphone selection (`InputDevice` / `InputDeviceChanged`), `Buffered`, `InputLevelChanged`. iOS, Mac Catalyst, macOS and Android only
+- One-stop `IAudio` facade exposing `Player` / `Source` / `Monitor` / `Devices` / `Recorder` / `Duplex` — inject it to discover the whole audio surface (focused interfaces remain independently injectable)
+- Pluggable cloud provider architecture via `ISpeechToTextProvider` and `ITextToSpeechProvider`
+- Azure AI Speech integration (STT + TTS)
+- ElevenLabs integration (Scribe STT + TTS)
+- Typecast integration (TTS only)
+- Convenience extension methods: `ListenUntilSilence`, `StatementAfterKeyword`, `WaitListenForKeywords`, `ListenForKeywords`
+- Permission management via `AccessState` and `RequestAccess()`
+- VU meter signal (outgoing) — `AudioLevelChanged` event on `ITextToSpeechService` and `IAudioPlayer` emits a normalized 0.0–1.0 RMS level during playback; `IsPlayerAnalysisSupported` reports per-platform availability
+- VU meter signal (incoming) — `InputLevelChanged` event on `ISpeechToTextService` (gated by `IsInputAnalysisSupported`), `IAudioSource`, and `IAudioMonitor` emits the same normalized 0.0–1.0 mic level while listening / capturing / monitoring
+- `AudioLevel` helper — the shared dBFS mapping (`FromRms` / `FromPcm16` / `FromSamples`) used by every meter, public so PCM you consume yourself meters on the same scale
+
+## Setup
+
+### 1. Install NuGet Packages
+
+For platform-native speech only:
+```bash
+dotnet add package Shiny.Speech
+```
+
+For Azure AI Speech (cloud STT + TTS):
+```bash
+dotnet add package Shiny.Speech
+dotnet add package Shiny.Speech.Azure
+```
+
+For ElevenLabs (cloud TTS):
+```bash
+dotnet add package Shiny.Speech
+dotnet add package Shiny.Speech.ElevenLabs
+```
+
+For Linux (console app, daemon, container, Raspberry Pi) — add the Linux audio backend alongside a
+recognizer, because Linux has no native speech engine:
+```bash
+dotnet add package Shiny.Audio.Linux
+dotnet add package Shiny.Speech.Azure          # or .OpenAI / .ElevenLabs / .Typecast
+# ...or run recognition offline on the device itself (STT only):
+dotnet add package Shiny.Speech.Linux.Whisper
+```
+
+### 2. Configure in MauiProgram.cs (or Blazor Program.cs)
+
+**Platform-native speech services:**
+```csharp
+builder
+    .UseMauiApp<App>()
+    .UseShiny(); // REQUIRED for native STT/audio — registers Shiny.Core's AndroidPlatform
+
+builder.Services.AddSpeechServices(); // Registers STT, TTS, AudioSource, AudioPlayer
+// On Browser/WASM: auto-detected via OperatingSystem.IsBrowser()
+```
+
+> **`UseShiny()` is mandatory for native speech/audio.** Android runtime permission requests
+> (`RECORD_AUDIO`) and current-activity tracking are delegated to `Shiny.Core`'s `AndroidPlatform`.
+> Reference the `Shiny.Hosting.Maui` package and call `.UseShiny()` on the `MauiAppBuilder` (before
+> building) so `AndroidPlatform` is registered and receives `OnRequestPermissionsResult` callbacks.
+> Without it, `RequestAccess()` throws a `TimeoutException` ("no current activity"). This replaced the
+> library's old self-contained `ActivityProvider` + `PermissionRequestFragment`.
+
+Or register individually:
+```csharp
+builder.Services.AddSpeechToText();   // ISpeechToTextService only
+builder.Services.AddTextToSpeech();   // ITextToSpeechService only
+builder.Services.AddAudioServices();  // IAudioSource + IAudioPlayer + IAudioMonitor + IAudioDevices + IAudioRecorder + IAudioDuplex + IAudio (from Shiny.Audio)
+builder.Services.AddAudioSource();    // IAudioSource only
+builder.Services.AddAudioPlayer();    // IAudioPlayer only
+builder.Services.AddAudioMonitor();   // IAudioMonitor only (iOS/Mac Catalyst + Android)
+builder.Services.AddAudioDevices();   // IAudioDevices only (iOS/Mac Catalyst, macOS, Android, Windows)
+builder.Services.AddAudioDuplex();    // IAudioDuplex only (iOS, Mac Catalyst, macOS, Android)
+```
+
+> **Namespace:** `IAudioSource`, `IAudioPlayer`, and `PipeStream` live in the **`Shiny.Audio`**
+> namespace (shipped in the standalone `Shiny.Audio` package, referenced by `Shiny.Speech`). Add
+> `using Shiny.Audio;` when consuming them. `AccessState` now comes from **`Shiny.Core`** and lives in
+> the **`Shiny`** namespace — because `Shiny` is a parent namespace, code inside `Shiny.Audio`/
+> `Shiny.Speech` resolves it automatically; add `using Shiny;` only where you reference it elsewhere.
+> All the DI extension methods above are in the `Shiny` namespace regardless of package.
+> `AddAudioServices()` / `AddAudioSource()` / `AddAudioPlayer()` come from `Shiny.Audio` and can be used
+> **without** `Shiny.Speech` for capture/playback-only scenarios (still require `.UseShiny()` on
+> Android).
+
+**Azure AI Speech (replaces platform-native with cloud):**
+```csharp
+builder.Services.AddAzureSpeech("your-subscription-key", "eastus");
+// Automatically registers IAudioSource and IAudioPlayer for platform audio I/O
+```
+
+Or with config object and selective services:
+```csharp
+builder.Services.AddAzureSpeech(
+    new AzureSpeechConfig { SubscriptionKey = "key", Region = "eastus" },
+    speechToText: true,
+    textToSpeech: true
+);
+```
+
+**ElevenLabs (replaces platform-native STT/TTS with cloud — Scribe + TTS):**
+```csharp
+// Register both STT (Scribe) and TTS at once
+builder.Services.AddElevenLabsSpeech("your-api-key");
+
+// Or selectively
+builder.Services.AddElevenLabsSpeechToText("your-api-key"); // Scribe STT only
+builder.Services.AddElevenLabsTextToSpeech("your-api-key"); // TTS only
+// Auto-registers IAudioSource and/or IAudioPlayer for platform audio I/O as needed
+```
+
+```csharp
+// With a config object — overrides default Scribe model / TTS model / voice
+builder.Services.AddElevenLabsSpeech(new ElevenLabsConfig
+{
+    ApiKey = "your-api-key",
+    SpeechToTextModel = "scribe_v1",
+    TextToSpeechModel = "eleven_multilingual_v2",
+    DefaultVoiceId = "21m00Tcm4TlvDq8ikWAM"
+});
+```
+
+> **ElevenLabs Scribe is request/response, not streaming**: results are yielded as a single final `SpeechRecognitionResult` when the user calls `Stop()` (the captured audio is buffered, wrapped in a WAV container, and posted to `/v1/speech-to-text`). For continuous partial results, use Azure instead.
+
+**Typecast (cloud TTS only — via the `typecast-csharp` SDK):**
+```csharp
+builder.Services.AddTypecastSpeech("your-typecast-api-key");
+// AddTypecastTextToSpeech(...) is an identical alias. Registers ITextToSpeechService + IAudioPlayer.
+
+// With a config object — model, default voice, language, emotion, audio format:
+builder.Services.AddTypecastSpeech(new TypecastConfig
+{
+    ApiKey = "your-typecast-api-key",
+    DefaultVoiceId = "<voice-id>",           // required unless you pass TextToSpeechOptions.Voice per call
+    Model = Typecast.Models.TTSModel.SsfmV30,
+    AudioFormat = Typecast.Models.AudioFormat.Mp3
+});
+```
+
+> **Typecast is TTS-only** — there is no `AddTypecastSpeechToText`; pair it with Azure/ElevenLabs/OpenAI or native STT if you need recognition. It has **no fixed default voice**: set `TypecastConfig.DefaultVoiceId` or pass `TextToSpeechOptions.Voice`, and call `ITextToSpeechService.GetVoicesAsync()` to discover the voice ids available to your account. `TypecastConfig` also exposes optional `Language`, `Emotion` (+`EmotionIntensity`) hints.
+
+**Changing API keys / credentials at runtime:**
+All cloud provider config objects (`AzureSpeechConfig`, `ElevenLabsConfig`, `OpenAiSpeechConfig`, `TypecastConfig`) are **mutable singletons**. Register them normally, then change the key (or region/model/voice) at any time — the provider uses the new value on its next call, no re-registration needed. Keep a reference to the config you pass in, or resolve it from DI:
+```csharp
+var config = new TypecastConfig { ApiKey = "initial" };
+builder.Services.AddTypecastSpeech(config);
+// ...later:
+config.ApiKey = "rotated-key";                              // via your retained reference
+serviceProvider.GetRequiredService<AzureSpeechConfig>().SubscriptionKey = "new-key"; // or resolve from DI
+```
+Providers that cache an SDK/HTTP client (ElevenLabs, Typecast) rebuild it automatically when the key changes (via `RefreshableClient<T>` in `Shiny.Speech.Cloud`); Azure and OpenAI read the config on every call. Do **not** re-call `AddXxxSpeech(...)` to change a key — just mutate the config.
+
+### 3. Platform Permissions
+
+**Android** — Add to `AndroidManifest.xml`:
+```xml
+<uses-permission android:name="android.permission.RECORD_AUDIO" />
+<uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+```
+`MODIFY_AUDIO_SETTINGS` is required for the TTS audio-level Visualizer and for the native STT beep suppression.
+
+Do **not** add a `<queries>` element for `android.speech.RecognitionService` — `Shiny.Speech` ships its own library manifest with it and that merges into the app automatically. (Without that declaration, API 30+ package visibility hides the recognition service, `IsSupported` is `false` and `RequestAccess()` returns `AccessState.NotSupported` before the mic permission is ever requested. The library handles it; consumers should not duplicate it.)
+
+**iOS** — Add to `Info.plist`:
+```xml
+<key>NSSpeechRecognitionUsageDescription</key>
+<string>This app uses speech recognition</string>
+<key>NSMicrophoneUsageDescription</key>
+<string>This app uses the microphone for speech recognition</string>
+```
+
+**Browser (Blazor WebAssembly)** — No manifest changes and **no `<script>` tag** needed. The browser prompts for microphone access automatically, and the JS interop module ships **inside the `Shiny.Audio` package** as a static web asset (`_content/Shiny.Audio/shiny-audio.js`), loaded on demand via `JSHost.ImportAsync`. Do **not** copy the JS into `wwwroot` or add a `<script>` reference — just reference the NuGet package.
+
+> **Note:** `IAudioSource` captures raw PCM audio in the browser using the Web Audio API (`getUserMedia` + `ScriptProcessorNode`), downsampled to 16kHz 16-bit mono — the same format as other platforms.
+
+**Linux** — No manifest or runtime permission prompt; microphone access is a filesystem/group concern
+the distro handles. Audio services come from the separate `Shiny.Audio.Linux` package and must be
+registered explicitly:
+
+```csharp
+using Shiny;
+
+// MUST come before AddSpeechServices() / AddCloudSpeechToText<T>() / AddCloudTextToSpeech<T>().
+// Those use TryAdd, so the first registration wins — and on Linux they register nothing at all.
+// AddLinuxAudio() is a no-op off Linux, so it is safe in shared startup code.
+builder.Services.AddLinuxAudio();
+
+builder.Services.AddCloudSpeechToText<AzureSpeechToTextProvider>();
+builder.Services.AddCloudTextToSpeech<AzureTextToSpeechProvider>();
+```
+
+**Linux offline STT (Whisper)** — when the user wants recognition without a cloud account, an API key,
+or a network connection (air-gapped boxes, kiosks, Raspberry Pi appliances, privacy requirements),
+use `Shiny.Speech.Linux.Whisper` instead of a cloud provider:
+
+```csharp
+using Shiny;
+using Shiny.Speech.Linux;
+using Whisper.net.Ggml;
+
+builder.Services.AddLinuxAudio();   // MUST come first — supplies IAudioSource
+
+// Simple: pick a model size.
+builder.Services.AddLinuxWhisperSpeechToText(GgmlType.BaseEn, QuantizationType.Q5_1);
+
+// Or configure fully:
+builder.Services.AddLinuxWhisperSpeechToText(new WhisperConfig
+{
+    ModelType = GgmlType.BaseEn,
+    Quantization = QuantizationType.Q5_1,
+    InitialPrompt = "Shiny, MAUI, Blazor",   // bias the decoder toward domain vocabulary
+    SilenceRmsThreshold = 500                // VAD sensitivity (0–32767)
+});
+```
+
+It registers a normal `ISpeechToTextService`, so `ListenUntilSilence()`, `StatementAfterKeyword()`,
+`WaitListenForKeywords()` and the `KeywordHeard` event all work unchanged.
+
+When generating Whisper code:
+- **STT only.** Whisper is a recognition model — there is no Whisper TTS. If the user also wants
+  speech output, pair it with a cloud TTS provider (`AddCloudTextToSpeech<T>()`). Never generate an
+  `AddLinuxWhisperTextToSpeech` — it does not exist.
+- **Never generate partial-result handling.** Whisper is a batch model; every
+  `SpeechRecognitionResult` has `IsFinal = true`. The provider runs client-side VAD and turns each
+  speech→silence segment into one inference.
+- **Recommend `PrepareAsync()` at startup.** The model downloads from Hugging Face on first use
+  (cached in `~/.local/share/shiny.speech/whisper`) and takes seconds to load; without it the user's
+  first utterance pays that cost.
+  ```csharp
+  var provider = (WhisperSpeechToTextProvider)host.Services.GetRequiredService<ISpeechToTextProvider>();
+  await provider.PrepareAsync();
+  ```
+- **Model sizing:** `Tiny`/`Base` on a Raspberry Pi 4/5 (roughly realtime at `Base`; `Small` and up
+  are slower than realtime). `Small`+ is fine on x64 desktops/servers. Prefer the `*En` variants for
+  English-only apps — more accurate at the same size. Suggest quantization (`Q5_1`) on ARM.
+- **Suits push-to-talk / wake-word-then-command, not continuous dictation** on constrained hardware.
+- **Requirements:** `libstdc++6` and glibc 2.31+ (Debian 11+ / Ubuntu 20.04+ / Pi OS Bullseye+).
+  `linux-x64`, `linux-arm64` and `linux-arm` are all supported. On **x86/x64 the CPU needs AVX, AVX2,
+  FMA and F16C** — otherwise add `Whisper.net.Runtime.NoAvx`. ARM has no such requirement.
+- Publishing with an explicit RID (`dotnet publish -r linux-arm64`) avoids copying every platform's
+  native binaries.
+- GPU is opt-in: add `Whisper.net.Runtime.Cuda` (or `.Vulkan`) and set `UseGpu = true`.
+- Registration is a no-op off Linux, so it is safe in shared startup code.
+
+When generating Linux code:
+- **Never generate `AddSpeechToText()` / `AddTextToSpeech()` for Linux** — there is no OS speech
+  engine there, so they register nothing. Always pair `AddLinuxAudio()` with a cloud provider or
+  `AddLinuxWhisperSpeechToText()`.
+- Guard optional startup on `LinuxAudioServiceCollectionExtensions.IsLinuxAudioAvailable` when the
+  app must degrade gracefully (a container with no sound devices mapped in returns `false`).
+- Runtime dependency is `libpulse-simple.so.0` (PulseAudio/PipeWire) or `libasound.so.2` (ALSA).
+  In a Dockerfile, install `libpulse0` or `libasound2`.
+- `IAudioPlayer` decodes **MP3 and WAV only** on Linux (managed decode via `NLayer`; there is no
+  system decoder). Other containers throw `NotSupportedException`.
+- `IAudioPlayer.IsVolumeControlSupported` is `true` only on PulseAudio/PipeWire — check it before
+  setting `Volume`, exactly as on iOS.
+
+## Code Generation Instructions
+
+### 1. Speech-to-Text Usage
+
+Always check permissions before using STT. The service uses a Start/Stop model with events.
+
+```csharp
+public class MyViewModel(ISpeechToTextService stt)
+{
+    async Task StartListening()
+    {
+        var access = await stt.RequestAccess();
+        if (access != AccessState.Available)
+            return;
+
+        // Subscribe to events (multiple subscribers allowed)
+        stt.ResultReceived += (s, result) =>
+        {
+            // result.Text — recognized text
+            // result.IsFinal — true when segment is finalized
+            // result.Confidence — optional confidence score (0-1)
+        };
+
+        stt.KeywordHeard += (s, keyword) =>
+        {
+            // keyword — the matched keyword string
+        };
+
+        stt.Error += (s, error) =>
+        {
+            // error.Message — error description
+            // error.Exception — optional exception
+        };
+
+        // Start listening (throws InvalidOperationException if already listening)
+        await stt.Start(new SpeechRecognitionOptions
+        {
+            Culture = CultureInfo.GetCultureInfo("en-US"),
+            SilenceTimeout = TimeSpan.FromSeconds(3),
+            PreferOnDevice = true,
+            Keywords = ["Yes", "No", "Maybe"]  // optional keyword detection
+        });
+    }
+
+    async Task StopListening()
+    {
+        await stt.Stop(); // no-op if not listening
+    }
+}
+```
+
+### Extension Methods (Convenience Patterns)
+
+```csharp
+public class MyViewModel(ISpeechToTextService stt)
+{
+    async Task SimpleDictation(CancellationToken ct)
+    {
+        // Listen until silence — starts, waits for first final result, stops
+        var text = await stt.ListenUntilSilence(
+            new SpeechRecognitionOptions
+            {
+                Culture = CultureInfo.GetCultureInfo("en-US"),
+                SilenceTimeout = TimeSpan.FromSeconds(3)
+            },
+            ct
+        );
+    }
+
+    async Task WakeWordActivation(CancellationToken ct)
+    {
+        // "Hey Computer, do something" → returns "do something"
+        // Waits for keyword, then captures next final statement
+        var command = await stt.StatementAfterKeyword(
+            ["Hey Computer"],
+            cancellationToken: ct
+        );
+    }
+
+    async Task WaitForAnswer(CancellationToken ct)
+    {
+        // Wait for one specific keyword (with optional timeout)
+        var answer = await stt.WaitListenForKeywords(
+            ["Yes", "No", "Maybe"],
+            timeout: TimeSpan.FromSeconds(30),
+            cancellationToken: ct
+        );
+        // Returns matched keyword or null on timeout
+    }
+
+    async Task ContinuousKeywords(CancellationToken ct)
+    {
+        // Stream keywords continuously as IAsyncEnumerable
+        await foreach (var keyword in stt.ListenForKeywords(
+            ["Up", "Down", "Left", "Right"],
+            cancellationToken: ct))
+        {
+            Console.WriteLine($"Direction: {keyword}");
+        }
+    }
+}
+```
+
+### 2. Text-to-Speech Usage
+
+```csharp
+public class MyViewModel(ITextToSpeechService tts)
+{
+    async Task Speak()
+    {
+        // Simple speech
+        await tts.SpeakAsync("Hello, world!");
+
+        // With options
+        await tts.SpeakAsync("Hello, world!", new TextToSpeechOptions
+        {
+            SpeechRate = 1.2f,
+            Pitch = 1.0f,
+            Volume = 0.8f,
+            Culture = CultureInfo.GetCultureInfo("en-US")
+        });
+
+        // List available voices
+        var voices = await tts.GetVoicesAsync();
+        var voice = voices.FirstOrDefault(v => v.Name.Contains("Neural"));
+
+        // Speak with specific voice
+        await tts.SpeakAsync("Hello!", new TextToSpeechOptions { Voice = voice });
+
+        // Stop speaking
+        if (tts.IsSpeaking)
+            await tts.StopAsync();
+    }
+}
+```
+
+#### Emotion & Tone — `SpeechTone`
+
+Every provider exposes emotion differently. `SpeechTone` is the portable form; each provider
+projects it onto its own mechanism, and providers with no expressive control ignore it. **Always
+generate `SpeechTone` rather than provider-specific config when the user asks for emotion** — it is
+the only form that works across providers.
+
+```csharp
+await tts.SpeakAsync("We just shipped it.", new TextToSpeechOptions
+{
+    Tone = new SpeechTone
+    {
+        Emotion = SpeechEmotion.Excited,   // Neutral, Happy, Excited, Sad, Angry, Fearful,
+                                           // Calm, Whispering, Shouting, Friendly, Serious, Sarcastic
+        Intensity = 1.5f,                  // 0.0-2.0, 1.0 = provider default
+        Instructions = "Sound like you're sharing good news."   // free text, OpenAI only
+    }
+});
+```
+
+| Provider | Mechanism | Caveat |
+| --- | --- | --- |
+| ElevenLabs | inline audio tags in the text | **only** `eleven_v3` — set `TextToSpeechModel = "eleven_v3"` or tags get stripped |
+| Typecast | `emotion_preset` + `emotion_intensity` | presets are only normal/happy/sad/angry/whisper/toneup/tonedown — mapping is lossy; `Fearful` and `Sarcastic` fall back to `TypecastConfig.Emotion` |
+| Azure | SSML `mstts:express-as style` + `styledegree` | style support is per-voice; unsupported styles render in the default delivery |
+| OpenAI | `instructions` | needs `gpt-4o-mini-tts`; `tts-1` ignores the field |
+| iOS / Android / Windows / Browser | none | tone discarded, annotations stripped |
+
+#### Bracketed annotations — `SpeechAnnotationHandling`
+
+Only ElevenLabs `eleven_v3` performs bracketed tags; every other engine speaks them aloud verbatim.
+The default `Auto` handling promotes the first emotion-bearing tag to a `SpeechTone` and strips tags
+for providers that can't perform them, so annotated text is safe to pass anywhere:
+
+```csharp
+// eleven_v3: performs the tags. Everywhere else: says "We shipped it. Everything is live."
+// with the closest available emotion applied.
+await tts.SpeakAsync("[excited] We shipped it. [laughs] Everything is live.");
+
+// Text legitimately containing brackets — pass through untouched
+await tts.SpeakAsync("See footnote [a] below.", new TextToSpeechOptions
+{
+    AnnotationHandling = SpeechAnnotationHandling.Preserve
+});
+
+// Remove tags unconditionally, even on eleven_v3, and never promote them
+await tts.SpeakAsync(llmText, new TextToSpeechOptions
+{
+    AnnotationHandling = SpeechAnnotationHandling.Strip
+});
+```
+
+This is the recommended path for LLM-authored speech: prompt the model to emit `[excited]`-style
+tags and Shiny.Speech normalizes them for whichever provider is registered.
+
+Helpers on `SpeechAnnotations` when you need them directly: `Strip(text)`, `Extract(text)`,
+`ToEmotion(tag)`, `ToAnnotation(emotion)`, and `Resolve(text, options, capabilities)`.
+
+An explicit `Tone` always beats a tag found in the text. Tags with no portable emotion — `[laughs]`,
+`[sighs]`, `[door slams]` — are dropped rather than promoted.
+
+### 3. Audio Capture
+
+```csharp
+using Shiny.Audio; // IAudioSource, IAudioPlayer, IAudioPlayback, PipeStream
+using Shiny;       // AccessState (from Shiny.Core)
+
+public class MyViewModel(IAudioSource audioSource)
+{
+    async Task CaptureAudio(CancellationToken ct)
+    {
+        // Returns raw PCM stream (16kHz, 16-bit, mono).
+        // NOTE: there are two overloads — StartCaptureAsync(AudioProcessingOptions?, CancellationToken)
+        // and StartCaptureAsync(AudioCaptureOptions, CancellationToken). Neither takes the token
+        // first, so pass it by name when you have nothing else to supply.
+        await using var stream = await audioSource.StartCaptureAsync(cancellationToken: ct);
+
+        // Read audio data from stream...
+        // Stream remains open until StopCaptureAsync is called
+
+        await audioSource.StopCaptureAsync();
+    }
+}
+```
+
+#### Capture Effects (pitch, echo, reverb) — `AudioEffectChain`
+
+Real-time DSP applied to the mic. Pure managed code over the normalized 16 kHz mono PCM, so it is
+identical on every platform — including pitch shift, which no platform supports natively on capture.
+
+**The pattern to generate: build the chain, keep the references, mutate them live.** Do not rebuild
+the chain or restart capture to change a setting.
+
+```csharp
+using Shiny.Audio;
+
+var chain = new AudioEffectChain();
+var pitch = chain.Add(new PitchShiftEffect { Semitones = 0 });     // Add returns the instance
+var echo  = chain.Add(new EchoEffect { DelayMs = 250, Mix = 0.35f, Enabled = false });
+
+var stream = await audioSource.StartCaptureAsync(
+    new AudioCaptureOptions { Effects = chain },
+    ct
+);
+
+// Live — applies on the next audio buffer, safe from the UI thread, no restart:
+pitch.Semitones = 5;
+echo.Enabled = true;
+chain.Enabled = false;    // master bypass
+```
+
+Three levels of on/off: `chain.Enabled` (master), `effect.Enabled` (per effect), `effect.Mix` (wet/dry,
+where present). Parameters are ramped and bypass is crossfaded, so live changes never click.
+
+| Effect | Parameters |
+| --- | --- |
+| `GainEffect` | `Gain` (0–32), `GainDb` |
+| `NoiseGateEffect` | `ThresholdDb` (−90–0), `AttackMs`, `ReleaseMs` |
+| `BiquadFilterEffect` | `Type` = `BiquadFilterType.LowPass`/`HighPass`/`BandPass`/`Notch`, `Frequency`, `Q`; `BiquadFilterEffect.Telephone()` |
+| `DistortionEffect` | `Drive` (1–50), `Mix` |
+| `RingModEffect` | `Frequency` (1–4000; 20–80 = robot), `Mix` |
+| `EchoEffect` | `DelayMs` (1–2000), `Feedback` (0–0.95), `Mix` |
+| `ChorusEffect` | `RateHz`, `DepthMs`, `Mix`, `Feedback` |
+| `ReverbEffect` | `RoomSize` (0–1), `Damping` (0–1), `Mix` |
+| `PitchShiftEffect` | `Semitones` (±24), read-only `Ratio` |
+
+All effect parameters are `float`. Presets build ordinary, still-adjustable chains:
+
+```csharp
+var chain = AudioEffectPresets.Create(AudioEffectPreset.Robot);
+// Robot | Chipmunk | DeepVoice | Cathedral | Telephone | Megaphone | Ensemble
+```
+
+**Never attach effects to audio that feeds speech recognition or wake-word detection** — they destroy
+accuracy. Do not set `AudioCaptureOptions.Effects` on the capture backing a `ISpeechToTextService`,
+and never wire them into an `IAiConversationService` voice loop.
+
+`PitchShiftEffect` adds up to ~50 ms of latency (the crossfade window); every other effect is
+latency-free and cheap enough to ignore at 16 kHz mono.
+
+#### Recording to WAV — `IAudioRecorder`
+
+Records the mic to a WAV file and owns the capture session, so no manual drain loop is needed.
+
+```csharp
+using Shiny.Audio;
+using Shiny;   // AccessState
+
+public class Recorder(IAudio audio)
+{
+    IAudioRecorder? recorder;
+    AudioRecording? last;
+
+    public async Task Start(AudioEffectChain chain)
+    {
+        recorder = audio.Recorder;   // transient — one per recording
+
+        if (await recorder.RequestAccess() != AccessState.Available)
+            return;
+
+        recorder.InputLevelChanged += (_, level) => { /* VU of the recorded signal */ };
+
+        await recorder.StartAsync(new AudioRecordingOptions
+        {
+            Path = null,                    // null → timestamped file under the local app data dir
+            Mode = AudioRecordMode.Both,    // Wet (default) | Dry | Both
+            Effects = chain,
+            Processing = AudioProcessingOptions.None,
+            MaxDuration = TimeSpan.FromMinutes(5)
+        });
+    }
+
+    public async Task Stop()
+    {
+        last = await recorder!.StopAsync();   // null when nothing was captured
+        await recorder.DisposeAsync();
+        recorder = null;
+
+        if (last != null)
+            await audio.Player.PlayAsync(last.Path);   // AudioRecording: Path, DryPath, Duration, SampleRate, Channels, SizeInBytes
+    }
+}
+```
+
+- `AudioRecordMode.Wet` — the processed take (default).
+- `AudioRecordMode.Dry` — the raw microphone; the effect chain is ignored.
+- `AudioRecordMode.Both` — two files; `AudioRecording.DryPath` holds the clean one.
+
+`StopAsync()` returns `null` for an empty take (and leaves no unplayable header-only file), so always
+null-check it. Output is WAV/PCM16 only — there is no AAC/MP3 encoder.
+
+Re-render a dry take with different settings instead of re-recording:
+
+```csharp
+AudioEffectProcessor.ProcessFile(recording.DryPath!, "cathedral.wav",
+    AudioEffectPresets.Create(AudioEffectPreset.Cathedral));
+
+// Or in memory:
+AudioEffectProcessor.Process(pcm16Samples, chain, sampleRate: 16000);
+```
+
+`WavWriter` (streaming, patches sizes on close) and `WavReader` are public for direct PCM ↔ WAV work:
+
+```csharp
+await using var writer = new WavWriter(File.Create(path), sampleRate: 16000, channels: 1);
+writer.Write(pcmSamples);          // ReadOnlySpan<short> or ReadOnlySpan<byte>
+
+var bytes = WavWriter.CreateFile(pcmBytes);   // whole file in memory, for short clips
+```
+
+#### Voice Processing (noise suppression & echo cancellation)
+
+Request platform voice-processing effects via `AudioProcessingOptions` to strip background noise and
+cancel the device's own speaker/TTS output from the mic (barge-in) so it isn't re-captured:
+
+```csharp
+using Shiny.Audio;
+
+// All three effects (AEC + noise suppression + AGC)
+var stream = await audioSource.StartCaptureAsync(AudioProcessingOptions.VoiceChat, ct);
+
+// Or select individually
+var stream2 = await audioSource.StartCaptureAsync(new AudioProcessingOptions
+{
+    EchoCancellation = true,       // subtracts speaker/TTS output — stops TTS bleeding into the mic
+    NoiseSuppression = true,       // attenuates steady background noise
+    AutomaticGainControl = true    // normalizes capture level
+}, ct);
+```
+
+**If the audio feeds a model instead of a listener — speaker recognition/verification, wake words,
+anything producing an embedding — pass `AudioProcessingOptions.Analysis` instead:**
+
+```csharp
+var stream = await audioSource.StartCaptureAsync(AudioProcessingOptions.Analysis, ct);
+```
+
+It is `None` plus `AllowBluetooth = false`. Two things otherwise corrupt the signal for those models,
+and neither shows up as an error — only as a model that stops recognizing people:
+
+- **AGC/NS are adaptive and non-linear.** They exist to normalize away speaker and channel
+  characteristics, which is exactly what a speaker embedding encodes; because they adapt per session,
+  two recordings of one person come out different.
+- **A Bluetooth mic runs over HFP (8 kHz narrowband).** Fricatives (/s/, /ʃ/, /f/) live above that, so
+  the captured bandwidth silently depends on what happens to be paired.
+
+On iOS/Mac Catalyst, no requested effects means the session uses `Measurement` mode (minimum system
+input processing); `AllowBluetooth = false` drops the Bluetooth options from the session category.
+Android's raw mic source and Windows capture never route to a Bluetooth mic implicitly, so `Analysis`
+is a no-op there. **Record enrollment and matching through the same options** — the embedding encodes
+the channel, so a template captured differently from the probe carries an offset no threshold fixes.
+
+With cloud STT providers **and the native Apple recognizer**, set it on
+`SpeechRecognitionOptions.AudioProcessing` (both capture through audio Shiny owns):
+
+```csharp
+await stt.Start(new SpeechRecognitionOptions
+{
+    Culture = CultureInfo.GetCultureInfo("en-US"),
+    AudioProcessing = AudioProcessingOptions.VoiceChat
+});
+```
+
+Behavior notes when generating code:
+- Effects are **best-effort** and device/driver dependent — never assume an effect is active.
+- **Apple** bundles all three into one Voice-Processing I/O unit: any flag enables the whole chain (no independent toggles).
+- **Android**: each flag maps to `AcousticEchoCanceler` / `NoiseSuppressor` / `AutomaticGainControl`, gated on `.IsAvailable`; echo cancellation also routes capture through `VoiceCommunication`.
+- **Windows**: no per-effect API — any flag selects the `Communications` capture category (driver-provided AEC/NS when present).
+- **Browser**: maps to `getUserMedia` constraints (`echoCancellation` / `noiseSuppression` / `autoGainControl`); AEC uses WebRTC AEC3 and cancels page-rendered TTS.
+- **Native `ISpeechToTextService` on iOS/Mac Catalyst/macOS** honors `AudioProcessing` — it owns its `AVAudioEngine`. Omitting it defaults to the full `VoiceChat` chain (not raw capture), which is what an open mic during TTS wants; pass `AudioProcessingOptions.Analysis` to opt out.
+- **Native `ISpeechToTextService` on Android ignores `AudioProcessing` and logs a warning** — recognition runs in the platform's out-of-process `SpeechRecognizer`, which opens the mic itself. Use a cloud provider if the recognition path needs these effects there.
+
+### 4. Audio Playback
+
+`IAudioPlayer.PlayAsync` has two overloads: a `Stream`, or a `string` that is **either a remote
+`http`/`https` URL or a local file path**. Pass a plain URL/path — each platform resolves it natively;
+never construct a platform-specific file URI. Remote sources stream progressively on Android / Windows /
+Browser and are buffered on Apple. In the browser a "local path" means an app-relative URL (no device
+file system).
+
+```csharp
+public class MyViewModel(IAudioPlayer audioPlayer)
+{
+    Task PlayRemote(CancellationToken ct) => audioPlayer.PlayAsync("https://example.com/clip.mp3", ct);
+    Task PlayLocal(CancellationToken ct)  => audioPlayer.PlayAsync(Path.Combine(FileSystem.AppDataDirectory, "chime.mp3"), ct);
+
+    async Task PlayStream(Stream mp3Stream, CancellationToken ct)
+    {
+        await audioPlayer.PlayAsync(mp3Stream, ct); // e.g. MP3
+
+        if (audioPlayer.IsPlaying)
+            await audioPlayer.StopAsync();
+    }
+}
+```
+
+**Clips play concurrently.** Starting one does **not** stop the others — background music, a sound
+effect and a voice line can overlap. Use `StartAsync` when you need to control a clip after it starts:
+it returns an `IAudioPlayback` handle immediately.
+
+| Member | Meaning |
+| --- | --- |
+| `IAudioPlayer.StartAsync(stream \| source, ct)` | Start a clip, return an `IAudioPlayback` as soon as it is playing |
+| `IAudioPlayer.PlayAsync(stream \| source, ct)` | `StartAsync` + `await Completion` — waits for **this** clip only |
+| `IAudioPlayer.Active` | `IReadOnlyList<IAudioPlayback>` of everything currently playing, oldest first |
+| `IAudioPlayer.StopAsync()` | Stops **every** clip this player started |
+| `IAudioPlayback.StopAsync()` | Stops **one** clip; the rest keep playing |
+| `IAudioPlayback.Completion` | `Task` that finishes when that clip ends, stops, or is cancelled |
+| `IAudioPlayback.Id` / `Source` / `IsPlaying` | Identity, the URL/path (`null` for a stream), and live state |
+
+```csharp
+public class SoundboardViewModel(IAudioPlayer audioPlayer)
+{
+    IAudioPlayback? music;
+
+    public async Task StartMusic(CancellationToken ct)
+        => this.music = await audioPlayer.StartAsync("https://example.com/theme.mp3", ct);
+
+    // Overlaps the music rather than interrupting it
+    public Task Ping(CancellationToken ct)
+        => audioPlayer.PlayAsync(Path.Combine(FileSystem.AppDataDirectory, "ping.mp3"), ct);
+
+    public Task StopMusic() => this.music?.StopAsync() ?? Task.CompletedTask;   // effects keep playing
+    public Task StopEverything() => audioPlayer.StopAsync();
+}
+```
+
+- A `CancellationToken` passed to `StartAsync` / `PlayAsync` stops **that clip only**, and completes
+  it normally — cancellation does not throw out of `Completion`.
+- `IAudioPlayback` is `IAsyncDisposable`; disposing it stops the clip. `PlayAsync` disposes its own.
+- Want the old "one clip at a time" behavior? `await audioPlayer.StopAsync()` before playing.
+- `AudioLevelChanged` stays a single stream per player: while clips overlap it reports the **loudest**
+  of them, which is what a VU meter should show.
+
+### 5. VU Meters (Audio Levels)
+
+Both directions are metered on the same normalized `0.0`–`1.0` scale.
+
+**Outgoing (playback / TTS)** — subscribe to `AudioLevelChanged` on `ITextToSpeechService` (native + cloud TTS) or `IAudioPlayer` (generic audio playback). Always gate UI on `IsPlayerAnalysisSupported` — it is `false` on Windows native TTS and Browser.
+
+**Incoming (microphone)** — subscribe to `InputLevelChanged` on `ISpeechToTextService` (gate on `IsInputAnalysisSupported`), on `IAudioSource` when you drive capture yourself (supported everywhere, no flag), or on `IAudioMonitor` while live-monitoring.
+
+```csharp
+public partial class VoiceViewModel : ObservableObject
+{
+    [ObservableProperty] double speakingLevel;   // bind to ProgressBar.Progress
+    [ObservableProperty] double listeningLevel;
+
+    public bool IsSpeakingVuSupported { get; }
+    public bool IsListeningVuSupported { get; }
+
+    public VoiceViewModel(ITextToSpeechService tts, ISpeechToTextService stt)
+    {
+        IsSpeakingVuSupported = tts.IsPlayerAnalysisSupported;
+        IsListeningVuSupported = stt.IsInputAnalysisSupported;
+
+        tts.AudioLevelChanged += (_, level) =>
+            MainThread.BeginInvokeOnMainThread(() => SpeakingLevel = level);
+
+        stt.InputLevelChanged += (_, level) =>
+            MainThread.BeginInvokeOnMainThread(() => ListeningLevel = level);
+    }
+}
+```
+
+Platform behaviour:
+
+| Surface | iOS / macOS | Android | Windows | Browser |
+|---|---|---|---|---|
+| Native TTS (`ITextToSpeechService`) | ✅ AVAudioEngine + player-node tap | ✅ `OnAudioAvailable` PCM RMS | ❌ | ❌ |
+| Cloud TTS (`CloudTextToSpeech`) | ✅ forwarded from `IAudioPlayer` | ✅ forwarded from `IAudioPlayer` | ❌ | ❌ |
+| Generic playback (`IAudioPlayer`) | ✅ `AVAudioPlayer.MeteringEnabled` | ✅ `Visualizer` on session | ❌ | ❌ |
+| Cloud STT (`CloudSpeechToText`) | ✅ forwarded from `IAudioSource` | ✅ forwarded from `IAudioSource` | ✅ forwarded from `IAudioSource` | ✅ forwarded from `IAudioSource` |
+| Native STT (`ISpeechToTextService`) | ✅ recognizer input tap | ✅ `OnRmsChanged` | ❌ | ❌ |
+| Capture (`IAudioSource`) | ✅ PCM RMS on the tap | ✅ PCM RMS on the read loop | ✅ PCM RMS per quantum | ✅ PCM RMS per worklet chunk |
+| Monitor (`IAudioMonitor`) | ✅ | ✅ | n/a (no monitor) | n/a (no monitor) |
+
+Apple native TTS plays through `AVAudioEngine` + `AVAudioPlayerNode` so a tap on the player node can compute RMS. The engine is created lazily on first speak and kept warm — first utterance adds ~50–150 ms; subsequent utterances are indistinguishable. Reset the bound level to `0` on speak completion / `StopAsync` / `Stop()` so the meter drains.
+
+Capture-side levels are throttled to ~20 events/sec (peak-held between emissions). If you consume the raw PCM stream yourself, compute the same value with the public `AudioLevel` helper:
+
+```csharp
+var read = await pcmStream.ReadAsync(buffer, ct);
+var level = AudioLevel.FromPcm16(buffer.AsSpan(0, read));   // 0.0 - 1.0, same scale as the events
+```
+
+### 6. Microphone Monitor & Device Selection (`IAudio` / `IAudioMonitor` / `IAudioDevices`)
+
+Inject the `IAudio` facade to reach the whole surface (`Player` / `Source` / `Monitor` / `Devices`),
+or inject the focused interfaces directly. `IAudioMonitor` routes the mic to the current output live
+(PA / "talk over a Bluetooth speaker"); `IAudioDevices` enumerates routes.
+
+```csharp
+using Shiny.Audio;
+using Shiny; // AccessState
+
+public partial class MicViewModel(IAudio audio) : ObservableObject
+{
+    [ObservableProperty] double level;
+
+    async Task Toggle()
+    {
+        if (audio.Monitor.IsMonitoring)
+        {
+            await audio.Monitor.Stop();
+            return;
+        }
+        if (await audio.Monitor.RequestAccess() != AccessState.Available)
+            return;
+
+        audio.Monitor.InputLevelChanged += (_, l) =>
+            MainThread.BeginInvokeOnMainThread(() => Level = l);
+
+        await audio.Monitor.Start(new AudioMonitorOptions
+        {
+            Gain = 1.0,
+            Processing = AudioProcessingOptions.VoiceChat,   // AEC/NS/AGC — fights feedback
+            InputDevice = audio.Devices.CurrentInput
+        });
+    }
+
+    void ListOutputs()
+    {
+        foreach (var d in audio.Devices.GetOutputs())      // AudioDevice: Id, Name, Io, Type, IsCurrent
+            Console.WriteLine($"{d.Name} ({d.Type}){(d.IsCurrent ? " *" : "")}");
+    }
+
+    void ClassifyRoute()
+    {
+        var output = audio.Devices.CurrentOutput;
+        if (output?.IsWired() == true)      { /* 3.5mm jack, Lightning, or USB-C */ }
+        if (output?.IsBluetooth() == true)  { /* HFP/SCO or A2DP */ }
+        if (output?.IsBuiltIn() == true)    { /* phone speaker/earpiece — nothing attached */ }
+        if (output?.IsHeadphones() == true) { /* audio is private — safe to speak a TTS reply */ }
+        var accessoryMic = output?.HasMicrophone() == true;
+    }
+
+    Task ChooseMic(AudioDevice mic) => audio.Monitor.SetInputDevice(mic);   // live device switch
+}
+```
+
+Behavior notes when generating code:
+- **Detecting wired headphones.** `AudioDeviceType` has `WiredHeadphones` (output only) and `WiredHeadset` (output + mic), mapped on both platforms (iOS `PortHeadphones`/`PortHeadsetMic`, Android `WiredHeadphones`/`WiredHeadset`). Prefer the `AudioDeviceExtensions` helpers — `IsWired()`, `IsBluetooth()`, `IsBuiltIn()`, `IsHeadphones()`, `HasMicrophone()` — over matching enum members by hand; they exist on both `AudioDevice` and `AudioDeviceType`. `IsWired()` **includes `Usb`**, because on jack-less handsets USB-C is the wired option and neither platform reports it as a `Wired*` type (a USB DAC/interface therefore also matches). Bluetooth cannot be narrowed to earbuds-vs-speaker on any platform. Watch `IAudioDevices.Changed` for plug/unplug.
+- `IAudioMonitor` is implemented on **iOS/Mac Catalyst and Android** (and Linux via `AddLinuxAudio()`); `IAudioDevices` on **iOS/Mac Catalyst, macOS, Android and Windows** (and Linux via `AddLinuxAudio()`). The `IAudio` facade throws `PlatformNotSupportedException` if `Monitor`/`Devices` are accessed elsewhere — guard by platform.
+- **Recording from a chosen microphone.** Pass an input from `IAudioDevices.GetInputs()` as `AudioRecordingOptions.InputDevice` (or `AudioCaptureOptions.InputDevice` for raw capture); `null` is the system default, and `CurrentInput` reports that default. Honoured on macOS (CoreAudio device), Windows (AudioGraph device input node) and Linux (Pulse source / ALSA PCM name); iOS/Mac Catalyst and Android set it as the preferred input. A device unplugged since it was listed falls back to the default instead of failing. Re-list on `IAudioDevices.Changed`.
+- **Bluetooth speaker vs. echo cancellation (iOS):** leave `AudioMonitorOptions.Processing` **null** to route to a Bluetooth A2DP speaker (phone mic + BT output). Enabling processing (AEC) engages iOS's voice-processing unit, which forces Bluetooth onto the low-quality HFP profile — an A2DP-only speaker then drops back to the phone. Only enable processing for phone-speaker output where feedback is a problem.
+- **AirPlay (HomePod / Apple TV) is NOT supported for a live mic** — iOS only permits AirPlay for playback, not while recording. Use Bluetooth for a wireless live PA.
+- **Feedback** (mic hearing the phone speaker) — keep distance, lower `Gain`, or enable AEC (accepting the Bluetooth trade-off). **Always stop the monitor on page-disappear / app-background.**
+- **Device selection is Android-first.** `IAudioMonitor.SetInputDevice`/`SetOutputDevice`: Android enumerates and selects both input and output; iOS can select the input but treats **output as observe-only** (no app-level output enumeration/selection — AirPlay/Bluetooth output is owned by the system picker). Use `IAudioDevices.CurrentInput`/`CurrentOutput` (with `.Type`) as a **display** property everywhere.
+- `IAudioSource` (pull-stream capture) and `IAudioMonitor` (live passthrough) are different tools — use the monitor for real-time mic→speaker, not a capture-stream-into-player loop.
+
+### 7. Full-Duplex Voice for Calls (`IAudioDuplex`)
+
+Use `IAudioDuplex` whenever audio is captured **and** played at the same time for a conversation (VoIP,
+intercom, walkie-talkie with open mic, FaceTime-style calls). It puts capture and playback on one
+voice-processing session so echo cancellation removes the far end's voice from your mic. **Never build a
+call from `IAudioSource` + `IAudioPlayer.StartAsync(Stream)`**: two sessions can't cancel each other's
+echo, and the player buffers the whole stream (Apple) or copies it to a file (Android) before playing.
+
+```csharp
+using System.Threading.Channels;
+using Shiny;
+using Shiny.Audio;
+
+public class CallAudio(IAudioDuplex duplex, IAudioDevices devices)   // or IAudio.Duplex / IAudio.Devices
+{
+    IAudioDuplexSession? session;
+
+    public async Task Start(Func<ReadOnlyMemory<byte>, CancellationToken, ValueTask> send, CancellationToken ct)
+    {
+        if (await duplex.RequestAccess() != AccessState.Available)
+            return;
+
+        session = await duplex.StartAsync(new AudioDuplexOptions
+        {
+            SampleRate = 16000,                                  // 8000 or 16000 only
+            Speakerphone = true,                                 // loudspeaker (default)
+            InputDevice = null,                                  // a mic from devices.GetInputs(); null = system default
+            PlaybackLatency = TimeSpan.FromMilliseconds(60),     // jitter target (default)
+            MaxPlaybackLatency = TimeSpan.FromMilliseconds(200)  // older audio dropped (default)
+        }, ct);
+
+        // Mic -> network: each item is one FrameDuration (20 ms) PCM16 mono LE frame you own.
+        _ = Task.Run(async () =>
+        {
+            await foreach (var frame in session.Captured.ReadAllAsync(ct))
+                await send(frame, ct);
+        }, ct);
+    }
+
+    // Network -> speaker: call from the receive thread, any size; never blocks.
+    public void OnReceived(ReadOnlyMemory<byte> pcm16) => session?.Play(pcm16.Span);
+
+    public void SetSpeaker(bool on) { if (session != null) session.Speakerphone = on; }   // live
+
+    // Live mic switch; null = system default. Must be an input from IAudioDevices.GetInputs().
+    public void SetMic(AudioDevice? mic) { if (session != null) session.InputDevice = mic; }
+
+    public async Task Stop()
+    {
+        if (session != null)
+            await session.DisposeAsync();   // == StopAsync(): completes Captured, restores the audio session
+        session = null;
+    }
+}
+```
+
+Behavior notes when generating code:
+- **One session at a time** — a second `StartAsync` throws `InvalidOperationException`; stop the first. Options are validated (`SampleRate` 8000/16000, `FrameDuration` whole ms 10–100, `MaxPlaybackLatency > PlaybackLatency`) and throw `ArgumentException`.
+- **Play is jitter-buffered**: silence until ~`PlaybackLatency` is queued, silence through gaps (then it re-primes), and the oldest audio is dropped back to `PlaybackLatency` when more than `MaxPlaybackLatency` piles up. Don't add your own buffering in front of it; `Buffered` shows the queue.
+- **`Captured` is bounded (~1 s, drop-oldest)** — read it continuously; it completes when the session stops.
+- **Both directions use the session's `SampleRate`.** Resample/decode before `Play` if the far end uses another rate.
+- `Processing` defaults to `AudioProcessingOptions.VoiceChat`. Null / nothing enabled means **no echo cancellation** (headset only). Apple enables AEC+NS+AGC together.
+- `Speakerphone`: loudspeaker vs earpiece; a connected headset (wired, or Bluetooth when `AllowBluetooth`) wins. No-op on macOS.
+- `InputDevice` (options + live on the session): the mic, an **input** from `IAudioDevices.GetInputs()` (an output throws `ArgumentException`); null = system default. A mic that isn't connected falls back to the default and the property reads null. On iOS/Mac Catalyst/Android a headset's mic and speaker move together: choosing a Bluetooth/wired/USB headset mic routes the call to that headset (Speakerphone ignored while chosen); choosing the built-in mic with a headset connected moves the call to speaker/earpiece per `Speakerphone`. macOS restarts the engine on a switch (short gap). `InputDeviceChanged` fires only when the chosen mic disappears (session back on the default, `InputDevice` == null), on a platform thread — not for your own sets. Android below API 31 doesn't start a Bluetooth SCO link, so a Bluetooth mic may not be reachable there.
+- Platforms: iOS/Mac Catalyst (`PlayAndRecord` + `VoiceChat` session, AVAudioEngine voice processing), macOS (engine only), Android (`VOICE_COMMUNICATION` AudioRecord + AudioTrack on one session, `MODE_IN_COMMUNICATION`; needs `MODIFY_AUDIO_SETTINGS` in the manifest). **Not on Windows, Linux or Browser** — `IAudio.Duplex` throws `PlatformNotSupportedException`; guard by platform.
+- `InputLevelChanged` fires on the capture thread — marshal to the UI thread.
+
+### 5. Custom Cloud Provider
+
+Implement `ISpeechToTextProvider` and/or `ITextToSpeechProvider`:
+
+```csharp
+public class MyCloudSttProvider : ISpeechToTextProvider
+{
+    // Required: surface non-fatal errors (e.g. a transient network blip between
+    // chunked requests in continuous mode) without aborting the IAsyncEnumerable.
+    // CloudSpeechToText subscribes to this and forwards to ISpeechToTextService.Error.
+    public event EventHandler<SpeechRecognitionError>? Error;
+
+    public async IAsyncEnumerable<SpeechRecognitionResult> RecognizeAsync(
+        Stream audioStream,
+        SpeechRecognitionOptions? options = null,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        // Send audioStream to your cloud API
+        // Yield results as they arrive
+        try
+        {
+            yield return new SpeechRecognitionResult("Hello", IsFinal: true, Confidence: 0.95f);
+        }
+        catch (HttpRequestException ex)
+        {
+            // Non-fatal: signal the error and let the session keep running.
+            // Throwing instead would terminate the enumerator and end the session.
+            Error?.Invoke(this, new SpeechRecognitionError(ex.Message, ex));
+        }
+    }
+}
+
+// Register in DI (IAudioSource is auto-registered)
+builder.Services.AddCloudSpeechToText<MyCloudSttProvider>();
+```
+
+## Best Practices
+
+1. **Always check permissions** — Call `RequestAccess()` before STT operations
+2. **Use Start/Stop lifecycle** — Call `Start()` to begin, `Stop()` to end; `Start()` throws if already listening
+3. **Subscribe before starting** — Attach event handlers before calling `Start()` to avoid missing results
+4. **Unsubscribe on stop** — Remove event handlers after calling `Stop()` to avoid leaks
+5. **Use extension methods for common patterns** — `ListenUntilSilence`, `StatementAfterKeyword`, `WaitListenForKeywords`, `ListenForKeywords` handle Start/Stop/event wiring for you
+6. **Dispose audio resources** — `IAudioSource` and `IAudioPlayer` implement `IAsyncDisposable`
+7. **Use `ListenUntilSilence`** — For simple dictation scenarios
+8. **Use `StatementAfterKeyword`** — For "Hey Siri" style wake word activation
+9. **Use `WaitListenForKeywords`** — For yes/no/choice scenarios
+10. **Use `ListenForKeywords`** — For continuous keyword detection as an async stream
+11. **Platform services auto-registered** — Cloud providers automatically register `IAudioSource` and `IAudioPlayer` as needed via `TryAdd`, so manual registration is no longer required
+12. **Handle `AccessState`** — Check for `NotSupported`, `Denied`, and `Restricted` states
+13. **Use `IsListening`/`IsSpeaking`/`IsPlaying`** — Check state before starting new listening/speech/playback
+14. **Configure silence timeout** — Default 2 seconds; adjust for your use case
+15. **Use `PreferOnDevice`** — Set to `true` for offline-capable STT: no network round trip and no session length cap, which is what long continuous sessions want. Best-effort on both platforms (iOS `RequiresOnDeviceRecognition`; Android's on-device recognizer on API 31+, else the system recognizer with the offline hint) — a device without local recognition silently stays on the network path
+    - **Do not restart a session per phrase** — `Start()` keeps the mic open and the service re-arms the single-utterance platform recognizer itself. Start once, subscribe to `ResultReceived`, and `Stop()` when done. Stop/Start per question tears down the audio engine and loses whatever is said while it comes back up. Note `Keywords` is fixed at `Start()`: for a keyword set that changes per turn, match `ResultReceived` yourself rather than restarting
+    - **Trust the session to recover** — transient recognizer errors are reported through `Error` and re-armed behind a backoff (250ms doubling to 4s), resetting on the next result. After `SpeechRetryPolicy.MaxConsecutiveFailures` (5) in a row, or on an unrecoverable error (missing permission, unsupported language), the session stops itself. Do not hand-roll a restart loop in the `Error` handler
+16. **Browser detection is automatic** — `AddSpeechServices()` uses `OperatingSystem.IsBrowser()` at runtime to register browser implementations; no conditional code needed in your app
+17. **Browser audio capture is supported** — `IAudioSource` captures raw PCM via the Web Audio API (`getUserMedia` + `ScriptProcessorNode`), downsampled to 16kHz 16-bit mono
+18. **No JS setup in the browser** — `shiny-audio.js` ships as a static web asset inside the `Shiny.Audio` package (`_content/Shiny.Audio/shiny-audio.js`) and is imported automatically via `JSHost.ImportAsync`; never copy it into `wwwroot` or add a `<script>` tag
+19. **CarPlay compatible** — iOS audio session uses `PlayAndRecord` with `AllowBluetooth` / `AllowBluetoothA2dp` / `DefaultToSpeaker`, so when CarPlay is active iOS automatically routes audio through the car's microphone and speakers — no CarPlay-specific code needed
+20. **VU meter gating** — check `IsPlayerAnalysisSupported` before showing a playback meter and `IsInputAnalysisSupported` before showing a mic meter; events do not fire where metering isn't available (playback: Windows native TTS + Browser; mic: Windows + Browser native STT). `IAudioSource.InputLevelChanged` needs no gate — it works on every platform
+21. **Marshal level events to the UI thread** — `AudioLevelChanged` fires from the audio render / synthesizer thread and `InputLevelChanged` from the capture thread; use `MainThread.BeginInvokeOnMainThread` in MAUI or equivalent in Blazor before mutating bound properties
+22. **Reset audio level on completion** — set your bound level back to `0` after `SpeakAsync` returns, or after `StopAsync` / `Stop()`, so the meter drains visually
+23. **Stop the mic monitor when leaving** — always `IAudioMonitor.Stop()` on page-disappear and app-background; a live monitor left open is feedback and battery drain
+24. **Guard monitor/devices by platform** — `IAudioMonitor` exists on iOS/Mac Catalyst + Android (+ Linux), `IAudioDevices` on iOS/Mac Catalyst, macOS, Android, Windows (+ Linux); accessing them via the `IAudio` facade elsewhere throws `PlatformNotSupportedException`
+25. **Prefer the `IAudio` facade for discovery** — inject one `IAudio` to reach `Player`/`Source`/`Monitor`/`Devices`/`Recorder`/`Duplex`; inject the focused interface directly when a class only needs one
+26. **Calls use `IAudioDuplex`** — never pair `IAudioSource` with `IAudioPlayer` for two-way voice; stop the duplex session when the call ends (it restores the audio session) and guard it by platform (iOS, Mac Catalyst, macOS, Android)
+
+## Reference Files
+
+For detailed API documentation, see:
+- `reference/api-reference.md` - Full API surface, interfaces, records, and configuration
+
+## Common Packages
+
+```bash
+dotnet add package Shiny.Speech                  # Core platform-native speech services
+dotnet add package Shiny.Speech.Cloud            # Cloud provider abstractions (included by Azure/ElevenLabs)
+dotnet add package Shiny.Speech.Azure            # Azure AI Speech provider
+dotnet add package Shiny.Speech.ElevenLabs       # ElevenLabs TTS provider
+dotnet add package Shiny.Speech.Typecast         # Typecast TTS provider (TTS only)
+```

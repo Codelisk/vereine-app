@@ -1,0 +1,270 @@
+---
+name: shiny-push
+description: Guide for implementing push notifications in .NET MAUI apps using Shiny.Push (native FCM/APNs) and Shiny.Push.AzureNotificationHubs
+auto_invoke: true
+triggers:
+  - push notification
+  - push notifications
+  - push delegate
+  - push manager
+  - IPushManager
+  - IPushDelegate
+  - firebase push
+  - FCM
+  - APNs
+  - azure notification hub
+  - azure notification hubs
+  - ANH
+  - remote notification
+  - device token
+  - registration token
+  - push tag
+  - push tags
+  - AddPush
+  - AddPushAzureNotificationHubs
+  - PushAccessState
+  - PushNotification
+  - Shiny.Push
+  - web push
+  - WebPushOptions
+  - BrowserPushManager
+  - VAPID
+  - shiny push
+  - push image
+  - push images
+  - rich push
+  - notification service extension
+  - UNNotificationServiceExtension
+  - mutable-content
+  - ShinyPushServiceExtension
+  - ShinyPushImageKeys
+  - PushImages
+  - ImageUri
+  - SendDefaultAsync
+  - BigPictureStyle
+---
+
+# Shiny Push Notifications
+
+## When to Use This Skill
+
+Use this skill when the user needs to:
+- Register for push notifications on iOS (APNs) or Android (FCM)
+- Handle incoming push notifications (foreground and background)
+- Handle push notification tap/entry events
+- Manage push notification tags/topics
+- Integrate Azure Notification Hubs as a push provider
+- Implement a custom push delegate
+- Configure Firebase for Android push
+- Request push notification permissions
+- Unregister from push notifications
+- Customize Apple foreground notification presentation
+- Build and display Android notifications from push data
+- Show an image with a push (iOS notification service extension, Android big picture)
+
+## Library Overview
+
+| Item | Value |
+|------|-------|
+| **NuGet (Native Push)** | `Shiny.Push` |
+| **NuGet (Azure NH)** | `Shiny.Push.AzureNotificationHubs` |
+| **Primary Namespace** | `Shiny.Push` |
+| **Config Namespace** | `Shiny` (extension methods on `IServiceCollection`) |
+| **Platforms** | iOS (APNs), tvOS (APNs, silent/badge only), Android (FCM), Windows (WNS), Blazor WebAssembly (Web Push / VAPID, in the same `Shiny.Push` package's `net10.0` build) |
+
+### tvOS
+
+tvOS registers with APNs and delivers **silent (background) pushes** exactly as iOS does — `IPushDelegate.OnReceived` fires and token handling is identical. What tvOS does not have is a notification a user can see or tap:
+
+- `UNNotificationContent` on tvOS carries only a badge count — no title, no body, no user info.
+- There is no `UNNotificationResponse`, so **`IPushDelegate.OnEntry` is never raised on tvOS** and nothing is presented in the foreground. Never generate tvOS code or guidance that relies on `OnEntry` or on a user tapping a push.
+- `RequestAccess()` requests `UNAuthorizationOptions.Badge` alone on tvOS. Do not pass Alert or Sound to the `RequestAccess(UNAuthorizationOptions)` overload there — they do nothing.
+- `IApplePushDelegate.GetPresentationOptions` is never called on tvOS.
+
+Treat a tvOS push as a signal to go fetch data, not as a message to read.
+
+## Setup
+
+### Native Push (FCM on Android, APNs on iOS)
+
+Register in your `MauiProgram.cs`:
+
+```csharp
+using Shiny;
+
+builder.Services.AddPush<MyPushDelegate>();
+```
+
+On Android, this uses `FirebaseConfig` with embedded `google-services.json` by default. To provide Firebase values manually:
+
+```csharp
+#if ANDROID
+builder.Services.AddPush<MyPushDelegate>(FirebaseConfig.FromValues(
+    appId: "your-app-id",
+    senderId: "your-sender-id",
+    projectId: "your-project-id",
+    apiKey: "your-api-key"
+));
+#else
+builder.Services.AddPush<MyPushDelegate>();
+#endif
+```
+
+### Blazor WebAssembly (Web Push)
+
+There is no separate Blazor package - `Shiny.Push`'s `net10.0` build carries the Web Push backend (`BrowserPushManager`). Never reference `Shiny.Push.Blazor`; it was merged into `Shiny.Push` in v6.
+
+```csharp
+using Shiny;
+using Shiny.Push;
+
+builder.Services.AddShinyCoreServices();
+builder.Services.AddPush<MyPushDelegate>(new WebPushOptions
+{
+    VapidPublicKey = "<your VAPID public key>"
+    // ServiceWorkerPath defaults to "./_content/Shiny.Push/push-sw.js"
+});
+
+var host = builder.Build();
+await host.Services.UseShiny();
+await host.RunAsync();
+```
+
+- Requires HTTPS (or `localhost`), a VAPID key pair (send pushes from the backend with the private key), and the service worker. To use your own service worker, `importScripts('./_content/Shiny.Push/push-sw.js')` from it and point `ServiceWorkerPath` at yours.
+- Safari only allows subscribing from an installed PWA.
+- `Tags` is always `null` on the browser.
+
+### Azure Notification Hubs
+
+Supports iOS, Mac Catalyst, macOS and tvOS (APNs), Android (FCM v1), and Windows (WNS) via a single registration call. A hub's APNs settings carry one bundle ID (the APNs topic), so a macOS or tvOS app with its own bundle ID needs its own hub; on tvOS send silent or badge-only payloads.
+
+```csharp
+using Shiny;
+
+builder.Services.AddPushAzureNotificationHubs<MyPushDelegate>(
+    "Endpoint=sb://...;SharedAccessKeyName=...;SharedAccessKey=...",
+    "your-hub-name"
+);
+```
+
+On Android with custom Firebase config:
+
+```csharp
+#if ANDROID
+builder.Services.AddPushAzureNotificationHubs<MyPushDelegate>(
+    "Endpoint=sb://...",
+    "your-hub-name",
+    FirebaseConfig.FromValues("appId", "senderId", "projectId", "apiKey")
+);
+#endif
+```
+
+### Push Images
+
+The push carries an image URL; Shiny reports it as `PushNotification.Notification.ImageUri` on every platform.
+
+**iOS** shows an image only through a Notification Service Extension. Shiny builds one during `dotnet build` - never
+generate an Xcode project, a separate extension csproj, or C# `UNNotificationServiceExtension` code:
+
+```xml
+<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
+    <ShinyPushServiceExtension>true</ShinyPushServiceExtension>
+    <!-- optional: payload keys, checked in order; dotted keys walk nested dictionaries -->
+    <ShinyPushImageKeys>image;fcm_options.image</ShinyPushImageKeys>
+</PropertyGroup>
+```
+
+- The push **must** have `"mutable-content": 1` in `aps` and an alert, or iOS never runs the extension (silent pushes never do).
+- Default keys: `image`, `image-url`, `imageUrl`, `attachment-url`, `fcm_options.image` (Firebase's `apns.fcm_options.image`).
+- The URL must be https (or the extension's ATS must allow the host - `ShinyPushServiceExtensionInfoPlist` merges a plist
+  with `NSAppTransportSecurity` into the extension). Max 10 MB (`ShinyPushImageMaxBytes`). For a private image send a
+  short-lived signed URL; the extension sends no auth headers.
+- The extension is Swift only (iOS gives it ~24 MB / 30 s) - your `IPushDelegate` code does not run in it.
+- Device builds need a provisioning profile for `$(ApplicationId).NotificationService` (override with
+  `ShinyPushServiceExtensionBundleId` / `ShinyPushServiceExtensionCodesignProvision`). Built on macOS only.
+- Own logic: `<ShinyPushServiceExtensionSource Include="MyService.swift" />` replaces the stock Swift; set
+  `ShinyPushServiceExtensionPrincipalClass` to its `@objc(...)` class name.
+- Mac Catalyst / macOS: no extension is built.
+
+```json
+{ "aps": { "alert": { "title": "New photo", "body": "Tap to view" }, "mutable-content": 1 },
+  "image": "https://cdn.example.com/photo.jpg" }
+```
+
+**Android**: FCM shows a *notification message's* `notification.image` itself while the app is in the background. In the
+foreground (or for a data message with an `image` data key), show it from the delegate:
+
+```csharp
+public override async Task OnReceived(PushNotification push)
+{
+#if ANDROID
+    if (push is AndroidPushNotification android)
+        await android.SendDefaultAsync(1001); // CreateBuilderAsync() + BigPictureStyle + large icon
+#endif
+}
+```
+
+**Web Push (Blazor)**: the bundled service worker shows the payload's `image` (Chromium) and reports it as `ImageUri`.
+
+**Server**: with Shiny.Extensions.Push set `PushNotification.ImageUrl` - it adds `mutable-content` + `image` for APNs and
+`notification.image` for FCM in one send.
+
+`LoadImageAsync()` returns the scaled `Bitmap` for a builder of your own; `FirebaseConfig.ImageKeys` changes the data
+keys. A failed image download never throws - the notification goes out without it.
+
+## Code Generation Instructions and Conventions
+
+1. **Always implement `IPushDelegate`** (or subclass `PushDelegate`) to handle push events. Register it as a generic type parameter on `AddPush<T>()` or `AddPushAzureNotificationHubs<T>()`.
+
+2. **Request access before using push.** Call `IPushManager.RequestAccess()` and check `PushAccessState.Status == AccessState.Available` before assuming push is working.
+
+3. **Use `PushAccessState.Assert()`** when you want to throw on denied/restricted permissions rather than checking the status manually.
+
+4. **Multiple delegates are supported.** You can register multiple `IPushDelegate` implementations; all will be called. Register additional delegates as keyed/standard services via `services.AddSingleton<IPushDelegate, MyOtherPushDelegate>()` or tag the class with `[Singleton]` from `Shiny.Extensions.DependencyInjection`.
+
+5. **Apple-specific customization:**
+   - Cast `IPushManager` to `IApplePushManager` for custom `UNAuthorizationOptions`.
+   - Implement `IApplePushDelegate` (extends `IPushDelegate`) to control foreground presentation options and background fetch results.
+   - On iOS, `PushNotification` may be an `ApplePushNotification` with access to the raw `NSDictionary` payload.
+
+6. **Android-specific customization:**
+   - `PushNotification` received in `OnReceived` may be an `AndroidPushNotification` with access to the native `RemoteMessage`.
+   - Use `AndroidPushNotification.CreateBuilder()` to build a `NotificationCompat.Builder` from the push data.
+   - Use `AndroidPushNotification.SendDefault(notificationId)` for quick notification display, or `SendDefaultAsync(notificationId)` / `CreateBuilderAsync()` to include the push image.
+   - Configure `FirebaseConfig.DefaultChannel` to set a default `NotificationChannel`.
+   - Configure `FirebaseConfig.IntentAction` to set a custom intent action for notification taps.
+
+7. **Tags/Topics:**
+   - Check `IPushManager.Tags != null` (or use `pushManager.IsTagsSupport()`) before using tag operations.
+   - Native Firebase on Android supports tags via FCM topic subscriptions.
+   - Azure Notification Hubs supports tags via installation tags.
+   - Use extension methods `TrySetTags`, `TryGetTags`, `TryRequestAccessWithTags` for safe tag operations.
+
+8. **Azure Notification Hubs specifics:**
+   - Implement `IPushInstallationEvent` to modify the `Installation` object (add templates, tags) before it is sent to ANH.
+   - Use `AzureNotificationConfig.BeforeSendInstallation` callback as an alternative to `IPushInstallationEvent`.
+   - `AzureNotificationConfig.ExpirationTime` controls token expiration. Each `RequestAccess` or tag update bumps expiration.
+   - `AzureNotificationConfig.AzureAuthenticationWaitTimeMs` (default 1000ms) adds a delay after registration to allow ANH propagation.
+
+9. **Namespace conventions:** Extension methods on `IServiceCollection` live in the `Shiny` namespace. All push types live in `Shiny.Push`.
+
+10. **Do NOT reference platform-specific types** (e.g., `AndroidPushNotification`, `ApplePushNotification`, `IApplePushManager`, `IApplePushDelegate`, `FirebaseConfig`) in shared/cross-platform code. Guard them with `#if ANDROID` / `#if APPLE` preprocessor directives or use runtime platform checks.
+
+## Namespace Ambiguities
+
+- **`Notification`**: Both `Shiny.Push` and `Shiny.Notifications` define a `Notification` type. If both packages are referenced in the same project, do NOT add both namespaces as global usings. Use `Shiny.Push.PushNotification` or FQN to disambiguate.
+
+## Best Practices
+
+- Always handle `OnNewToken` in your delegate to sync the updated token with your backend server.
+- Always handle `OnEntry` to navigate the user to the appropriate screen when they tap a notification.
+- Use `OnReceived` for silent/data-only notifications and background processing. On iOS, ensure `content-available: 1` is set in the push payload for background delivery.
+- Check `PushAccessState.Status` after `RequestAccess()` -- do not assume success.
+- On Android 13+, the POST_NOTIFICATIONS runtime permission is requested automatically by Shiny during `RequestAccess()`.
+- Prefer `AddPush<TDelegate>()` over `AddPush()` + manual delegate registration to ensure correct service lifetime.
+- For Azure Notification Hubs, always test with a sufficient `AzureAuthenticationWaitTimeMs` if you encounter "InstallationId not found" errors.
+- The `RegistrationToken` on `IPushManager` is the provider-level token (e.g., ANH InstallationId), while `NativeRegistrationToken` is the raw OS token (FCM token or APNs device token). Use `RegistrationToken` when communicating with your backend.
+
+## Reference Files
+
+- [API Reference](reference/api-reference.md)

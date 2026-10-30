@@ -1,0 +1,38 @@
+<Project>
+
+  <PropertyGroup Label="Target">
+    <LangVersion>preview</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Quality">
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <!-- Doc-File noetig, damit IDE0005 (unnoetige usings) im Build laeuft; CS1591 (fehlende XML-Doku) ist gewollt aus -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Label="AOT">
+    <!-- AOT ist Pflicht (docs/adr/0002-nativeaot.md): Analyzer in jedem Build, damit Trim-/AOT-Probleme
+         schon im Debug-Build als Fehler auffallen und nicht erst beim Release-Publish. -->
+    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+    <EnableAotAnalyzer>true</EnableAotAnalyzer>
+    <EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Build">
+    <!-- Build-Output unter artifacts/ statt bin/obj je Projekt -->
+    <UseArtifactsOutput>true</UseArtifactsOutput>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Product">
+    <Authors>Codelisk</Authors>
+    <Company>Codelisk</Company>
+    <Product>Vereine</Product>
+    <NeutralLanguage>de</NeutralLanguage>
+  </PropertyGroup>
+
+</Project>

@@ -1,0 +1,334 @@
+---
+name: shiny-locations
+description: GPS tracking, geofence monitoring (enter/exit/dwell), reverse geocoding, and motion activity recognition for .NET MAUI, iOS, and Android using Shiny.Gps and Shiny.Geofencing (Shiny.Locations meta-package), plus unlimited GPS-driven region geofencing (Shiny.Geofencing.Regions) over SQLite documents or the reverse geocoder
+auto_invoke: true
+triggers:
+  - gps
+  - geofence
+  - geofencing
+  - location
+  - position
+  - coordinates
+  - latitude
+  - longitude
+  - distance
+  - tracking
+  - background location
+  - foreground location
+  - GPS delegate
+  - geofence delegate
+  - GpsReading
+  - location AI tools
+  - Shiny.Locations.Extensions.AI
+  - AddLocationAITool
+  - LocationAITools
+  - estimate travel time
+  - GpsRequest
+  - GeofenceRegion
+  - IGpsManager
+  - IGeofenceManager
+  - AddGps
+  - AddGeofencing
+  - dwell
+  - geofence dwell
+  - loitering
+  - DwellTime
+  - GeofenceState.Dwelling
+  - reverse geocoding
+  - geocoding
+  - geocoder
+  - address from coordinates
+  - IGeocoder
+  - AddGeocoding
+  - Placemark
+  - ReverseGeocode
+  - NominatimOptions
+  - OpenStreetMap
+  - Nominatim
+  - motion activity
+  - activity recognition
+  - walking
+  - running
+  - cycling
+  - automotive
+  - stationary
+  - IMotionActivityManager
+  - IMotionActivityDelegate
+  - MotionActivityReading
+  - MotionActivityType
+  - MotionActivityConfidence
+  - AddMotionActivity
+  - Shiny.Gps
+  - Shiny.Geofencing
+  - Shiny.Locations
+  - GeofenceExtensions
+  - region geofencing
+  - unlimited geofences
+  - polygon geofence
+  - Shiny.Geofencing.Regions
+  - Shiny.Geofencing.Regions.DocumentDb
+  - AddRegionGeofencing
+  - IRegionGeofenceManager
+  - IRegionGeofenceDelegate
+  - RegionGeofenceConfig
+  - RegionChange
+  - CurrentRegion
+  - IRegionSource
+  - RegionMatch
+  - AddRegionSet
+  - AddGeocoderRegionSet
+  - GeocoderRegionLevel
+  - GeocoderRegionSource
+  - AddDocumentRegionSet
+  - DocumentRegionSource
+  - MapNorthAmericaData
+  - AddNorthAmericaSeeder
+  - AddNorthAmericanRegions
+  - AddNorthAmericanCities
+  - NorthAmericaData
+  - GeoRegion
+  - GeoCity
+---
+
+# Shiny Locations
+
+GPS tracking, geofence monitoring (enter/exit/dwell), reverse geocoding, and motion activity recognition for .NET MAUI, iOS, and Android applications with full foreground and background support.
+
+## When to Use This Skill
+
+Use this skill when the user needs to:
+
+- Track the device GPS position (foreground or background)
+- Monitor geofence regions (enter/exit events)
+- Detect when the user stays inside a geofence for a period of time (dwell)
+- Turn coordinates into a street address (reverse geocoding)
+- Calculate distances between geographic positions
+- Request location permissions
+- Get a single current position reading
+- Implement background location tracking delegates
+- Detect stationary vs. in-motion state
+- Recognize motion activity (walking, running, cycling, automotive, stationary)
+- Implement motion activity delegates for background activity processing
+
+## Library Overview
+
+| Property   | Value                        |
+|------------|------------------------------|
+| NuGet      | `Shiny.Gps` (GPS, motion activity, geocoding), `Shiny.Geofencing` (geofences), `Shiny.Locations` (meta-package referencing both - no code of its own). Blazor WASM GPS is in `Shiny.Gps`'s `net10.0` build (chosen with `OperatingSystem.IsBrowser()`); `Shiny.Locations.Blazor` no longer exists |
+| Namespace  | `Shiny.Locations`            |
+| Platforms  | iOS, Android, Windows, Blazor WebAssembly (foreground GPS only). **No tvOS target** — `CLMonitor`, `CLMonitorConfiguration` and `CLRegionState` are absent on tvOS, so geofencing cannot be implemented there |
+| DI Namespace | `Shiny` (extension methods on `IServiceCollection`) |
+| Shared types | `Position` and `Distance` live in `Shiny.Core` (same namespaces as before: `Shiny.Locations.Position`, `Shiny.Distance`) |
+
+`Shiny.Gps` and `Shiny.Geofencing` are independent - neither references the other. Reference only the one
+you need; reference `Shiny.Locations` (or both) when you need GPS and geofencing. Every type kept the
+`Shiny.Locations` namespace, so no `using` changes are needed after switching packages.
+
+## Setup
+
+### GPS Registration
+
+Register GPS in `MauiProgram.cs`:
+
+```csharp
+// GPS without a background delegate (foreground only)
+services.AddGps();
+
+// GPS with a background delegate
+services.AddGps<MyGpsDelegate>();
+```
+
+### Blazor WebAssembly GPS Registration
+
+Register GPS in `Program.cs` of a Blazor WebAssembly project. Only foreground GPS
+is supported - the browser does not expose background location, geofencing, or
+significant-location-change APIs. Background modes on a `GpsRequest` are silently
+treated as foreground.
+
+```csharp
+builder.Services.AddGps();
+// or with a foreground-only delegate:
+builder.Services.AddGps<MyGpsDelegate>();
+```
+
+Geofencing (`AddGeofencing`) is **not** available on
+Blazor WebAssembly. For region-entry behavior on the web, evaluate regions
+server-side from GPS reports and notify the client via `Shiny.Push` (Web Push).
+
+### Geofence Registration
+
+Register geofencing in `MauiProgram.cs` (package `Shiny.Geofencing`):
+
+```csharp
+using Shiny; // AddGeofencing lives here
+
+// Standard geofencing with a delegate
+services.AddGeofencing<MyGeofenceDelegate>();
+```
+
+`AddGpsDirectGeofencing` is **gone** - never generate it. It was removed when geofencing moved out of the GPS
+package (the code is parked, commented out, in `Shiny.Gps`). On Android without Google Play Services there is
+no longer an automatic GPS-direct fallback.
+
+### Geocoding Registration
+
+```csharp
+services.AddGeocoding(); // IGeocoder - native on iOS, Mac Catalyst, Android; OpenStreetMap Nominatim everywhere else
+
+// optional - configure the Nominatim fallback (Windows, Linux, macOS, Blazor, Android without Play Services)
+services.AddGeocoding(o =>
+{
+    o.UserAgent = "MyApp/1.0 (contact@myapp.com)"; // public server policy: identify your app (defaults to entry assembly name/version)
+    o.Email = "contact@myapp.com";                 // optional contact for heavy use
+    o.Language = "en";                              // Accept-Language; defaults to the current UI culture
+    // o.BaseUri = new Uri("https://nominatim.mycompany.com/"); // self-hosted server for heavy use
+});
+```
+
+The public Nominatim server is free but has a usage policy: the registered geocoder serializes requests, spaces them at
+least `MinimumRequestInterval` (1s) apart, and caches `CacheSize` (100) results keyed on the position rounded to ~1m.
+Results are © OpenStreetMap contributors - show `NominatimOptions.Attribution` wherever they are displayed. Never
+generate code that fires reverse geocodes on every GPS reading against the public server; geocode on demand or on a
+significant move. The implementation is internal - always inject `IGeocoder`, never `new` up or reference a Nominatim
+geocoder type.
+
+### Motion Activity Registration
+
+Register motion activity recognition in `MauiProgram.cs`:
+
+```csharp
+// Motion activity without a background delegate
+services.AddMotionActivity();
+
+// Motion activity with a background delegate
+services.AddMotionActivity<MyMotionActivityDelegate>();
+```
+
+> **Platform support:** Motion activity is supported on iOS (CMMotionActivityManager) and Android (Google Play Services Activity Recognition). On Android, Google Play Services must be available — the registration silently no-ops if unavailable. Other platforms (Windows, Blazor) are no-ops.
+
+## Code Generation Instructions
+
+When generating code for Shiny.Locations:
+
+1. **Always request permissions before starting listeners.** Call `RequestAccess` and check the returned `AccessState` before calling `StartListener` or `StartMonitoring`.
+2. **Use `GpsRequest` factories or constructor** based on the background mode needed:
+   - `GpsRequest.Foreground` for foreground-only use (equivalent to `new GpsRequest(GpsBackgroundMode.None)`)
+   - `new GpsRequest(GpsBackgroundMode.Standard)` for standard background (iOS: significant location changes; Android: 3-4 updates/hour)
+   - `GpsRequest.Realtime(true)` for background realtime with precise accuracy (iOS/Android: updates every 1 second)
+3. **Inject `IGpsManager` or `IGeofenceManager`** via constructor injection. Never instantiate managers directly.
+4. **Implement `IGpsDelegate`** for background GPS processing, or subclass the abstract `GpsDelegate` base class for built-in filtering by distance/time and stationary detection. The `GpsDelegate` supports minimum filters (`MinimumDistance`, `MinimumTime`) that use AND logic when both are set, and maximum filters (`MaximumDistance`, `MaximumTime`) that use OR logic and always override minimums when crossed.
+5. **Implement `IGeofenceDelegate`** for geofence enter/exit events.
+6. **Implement `IMotionActivityDelegate`** for background motion activity processing. The delegate receives `MotionActivityReading` with `Activity` (MotionActivityType), `Confidence` (MotionActivityConfidence), and `Timestamp`.
+6. **Use `Position` record** with `(latitude, longitude)` -- latitude range is -90 to 90, longitude range is -180 to 180.
+7. **Use `Distance` factory methods** -- `Distance.FromMeters()`, `Distance.FromKilometers()`, `Distance.FromMiles()`. Never construct `Distance` directly with kilometers unless intentional.
+8. **Use extension methods** for convenience: `GetCurrentPosition()`, `GetLastReadingOrCurrentPosition()`, `IsListening()`, `IsPositionInside()`, `IsInsideRegion()`.
+9. **Subscribe to the `GpsReadingReceived` C# event on `IGpsManager` (or `MotionActivityReadingReceived` on `IMotionActivityManager`) for foreground UI updates.** Rx has been removed from Shiny.Locations — use `event EventHandler<GpsReading>` / `event EventHandler<MotionActivityReading>` and always unsubscribe on disappear/dispose to avoid leaks. Delegates remain the way to handle readings while the app is backgrounded.
+10. **For `GeofenceRegion`**, always provide a unique `Identifier` string. The `SingleUse` parameter removes the region after the first trigger. To register a region idempotently, use the `TryStartMonitoring(region, replaceIfExists)` extension on `IGeofenceManager` — it only starts monitoring if a region with the same identifier isn't already being monitored, and (when `replaceIfExists` is `true`, the default) stops and restarts an existing region so changed position/notification settings take effect. It returns `true` when the region already existed, `false` when it was newly added.
+11. **Inject `IMotionActivityManager`** via constructor injection for motion activity features. Call `RequestAccess()` before `StartListener()`, then subscribe to `MotionActivityReadingReceived` for foreground updates or register `IMotionActivityDelegate` for background processing. `IsListening` is persisted and the listener is re-registered at startup after the process is killed, so generate `if (!manager.IsListening) await manager.StartListener();` - never call `StartListener()` unconditionally on app start, it throws when already listening. The same holds for `IGpsManager`: a `Standard`/`Realtime` listener with `AutoRestart` (default `true`) is persisted on every platform and restarted at startup, so check `CurrentListener == null` (or the `IsListening()` extension) before starting.
+12. **For geofence dwell, set `DwellTime` with an object initializer** - `new GeofenceRegion("id", center, radius) { DwellTime = TimeSpan.FromMinutes(5) }` - and handle `GeofenceState.Dwelling` in `IGeofenceDelegate.OnStatusChanged`. `DwellTime` is not a constructor parameter. Entry and exit are always tracked internally; `NotifyOnEntry`/`NotifyOnExit` only filter what reaches the delegate (set both false for dwell-only). A `SingleUse` region with a `DwellTime` is removed after the dwell, not the entry. No GPS, background mode or extra permission is needed. **Timing differs on iOS:** Android (native loitering delay) and Windows (timer) report `Dwelling` while the user is still inside, but iOS usually reports it at exit, just before `Exited`, because iOS suspends the app between region events. When generating dwell code, don't assume the user is still inside on iOS, and say so if the user's scenario needs an in-place action.
+13. **For reverse geocoding, inject `IGeocoder`** (registered by `AddGeocoding()`), check `IsSupported`, then `await geocoder.ReverseGeocode(position, ct)` - it returns `IReadOnlyList<Placemark>` (empty when nothing matched) with `FormattedAddress`, `Thoroughfare`, `Locality`, `AdministrativeArea`, `PostalCode`, `CountryCode`, etc. It needs network access. On Windows, Linux, macOS, Blazor and Android without Play Services the registered `IGeocoder` uses OpenStreetMap Nominatim - display `NominatimOptions.Attribution` with its results, and expect calls to queue at one per second against the public server.
+
+## Conventions
+
+- All async operations return `Task` or `Task<T>`.
+- The convenience extension methods live on `Shiny.Locations.LocationExtensions` (renamed from `Extensions` in 5.2.5 — a type named `Shiny.Locations.Extensions` collides with the `Shiny.Locations.Extensions.AI` namespace and produces CS0434 in consuming projects). They are extension methods, so call sites are unaffected. Since the package split, the geofence ones (`TryStartMonitoring`, `IsPositionInside`) live on `Shiny.Locations.GeofenceExtensions` in `Shiny.Geofencing`; the GPS ones stay on `LocationExtensions` in `Shiny.Gps`.
+- Foreground observation uses C# `event EventHandler<T>` on the managers (`GpsReadingReceived`, `MotionActivityReadingReceived`) — Rx is no longer used in Shiny.Locations.
+- The `GpsBackgroundMode` enum controls background behavior: `None` (foreground), `Standard` (periodic), `Realtime` (continuous).
+- `GeofenceState` enum values: `Unknown`, `Entered`, `Exited`, `Dwelling` (only for regions with a `DwellTime`).
+- `AccessState` is from Shiny.Core and includes `Available`, `Denied`, `Disabled`, `Restricted`, `NotSupported`, `Unknown`.
+
+## Best Practices
+
+- Always check `AccessState` before starting GPS or geofence monitoring. Handle `Denied` and `Restricted` states gracefully with user-facing messaging.
+- Prefer `GpsBackgroundMode.Standard` over `Realtime` to conserve battery. Only use `Realtime` when continuous tracking is required.
+- Stop listeners when they are no longer needed (`StopListener()` / `StopAllMonitoring()`).
+- Use the abstract `GpsDelegate` base class instead of implementing `IGpsDelegate` directly. It provides `MinimumDistance`, `MinimumTime` (AND when both set), `MaximumDistance`, `MaximumTime` (OR, overrides minimums) filtering, and stationary detection out of the box.
+- For single position reads, use the `GetCurrentPosition()` extension method which handles starting/stopping the listener automatically.
+- Unsubscribe from `GpsReadingReceived` / `MotionActivityReadingReceived` when the view/page is no longer active (pair `+=` with `-=` on disappear/dispose).
+- On iOS, configure `NSLocationWhenInUseUsageDescription` and `NSLocationAlwaysAndWhenInUseUsageDescription` in `Info.plist`. Word the "always" strings for what background access actually does — following the user with the app closed — rather than reusing the when-in-use sentence.
+- **On iOS, call `RequestAccess` with the background request from the feature that needs it, not at launch.** Authorization escalates (when-in-use first, always only as an upgrade) and the system presents the upgrade prompt once, so the moment the user turns the feature on is the only moment the dialog can be explained. Requires Shiny.Locations 5.5.0+ — earlier builds reused the when-in-use session for background requests and returned `AccessState.Restricted` without prompting.
+- **Treat `AccessState.Restricted` as "granted, but not for what you asked for", not as a refusal.** It is what `AuthorizedWhenInUse` reports as when a background request asks about it, and also what reduced accuracy reports as. A user-facing message should say which journeys/readings are lost and offer the upgrade, rather than reading like a blocked permission.
+- On Android, configure `ACCESS_FINE_LOCATION`, `ACCESS_COARSE_LOCATION`, and `ACCESS_BACKGROUND_LOCATION` permissions in `AndroidManifest.xml`.
+- On iOS, add `NSMotionUsageDescription` to `Info.plist` when using motion activity recognition.
+- On Android, motion activity recognition requires `com.google.android.gms.permission.ACTIVITY_RECOGNITION` permission and Google Play Services.
+
+## Region Geofencing (Shiny.Geofencing.Regions)
+
+GPS-driven geofencing with **no region limit** and any shape - use it instead of `AddGeofencing` when the app needs
+more than 20 (iOS) / 60 (Android) regions, polygons, or address-level regions (country/state/city). It runs background GPS
+(it **owns** the `IGpsManager` listener - don't also start GPS yourself with a different request), filters readings
+(`MinimumDistance` 300m / `MinimumTime` 1 min by default, optional `MaximumDistance`/`MaximumTime` safety nets), and asks
+each **region set**'s `IRegionSource` which region the reading is in. Each set tracks one current region, persisted, so
+restarts don't replay entries. iOS, Android, Mac Catalyst (`AddRegionGeofencing` is `#if APPLE || ANDROID`; the types
+compile on `net10.0`). Namespace `Shiny.Locations`; registration in `Shiny`.
+
+```csharp
+builder.Services.AddRegionGeofencing<MyRegionDelegate>(cfg => cfg
+    // built in: reverse geocoding through IGeocoder - online only; AddRegionGeofencing registers AddGeocoding() if missing
+    .AddGeocoderRegionSet("states", GeocoderRegionLevel.AdministrativeArea)   // id "US-Colorado", region = Placemark
+    .AddGeocoderRegionSet("cities", GeocoderRegionLevel.Locality)             // id "US-Colorado-Denver"
+    // Shiny.Geofencing.Regions.DocumentDb - SQLite document store registered with AddDocumentStore
+    .AddDocumentRegionSet<Zone>("zones", z => z.Id, z => z.Name, filter: z => z.Active)   // polygons: containment
+    .AddDocumentRegionSet<Store>("stores", s => s.Id, s => s.Name, withinMeters: 500)    // points: proximity
+    // custom source
+    .AddRegionSet("custom", sp => new MyRegionSource(sp.GetRequiredService<IMyApi>()))
+);
+
+public class MyRegionDelegate : IRegionGeofenceDelegate
+{
+    public Task OnRegionChanged(RegionChange change)   // exit before entry when moving A -> B in one set
+    {
+        var zone = change.RegionAs<Zone>();             // the document / Placemark / your object
+        return Task.CompletedTask;
+    }
+}
+
+// IRegionGeofenceManager: RequestAccess(), Start() (idempotent), Stop() (forgets current regions), IsStarted,
+// GetCurrent() (resolves every set from the last reading; no events, no state change)
+```
+
+- Document regions need `opts.ConfigureDocument<T>(cfg => cfg.MapSpatialProperty(nameof(T.Geo), x => x.Geo))` in a
+  SQLite `AddDocumentStore` (`SqliteDatabaseProvider`). `idSelector` must return the document's store id (exits after a
+  restart re-read the region by it). `storeName:` picks a keyed store.
+- US/Canada dataset (in `.DocumentDb`): `opts.MapNorthAmericaData()`, `services.AddNorthAmericaSeeder()`, then
+  `cfg.AddNorthAmericanRegions()` (set "regions", ids `US-CO`/`CA-ON`) and `cfg.AddNorthAmericanCities(withinMeters: 25_000)`
+  (set "cities", ids `US-CO-denver`). Types `GeoRegion`/`GeoCity`/`NorthAmericaData` live in `Shiny.Locations.NorthAmerica`.
+- Geocoder sets: a failed lookup keeps the current region (no false exit while offline); sets share one lookup per
+  reading; exits after a restart carry only `RegionId` (`Region`/`RegionName` null). Respect geocoder rate limits -
+  keep `MinimumTime` >= 1 minute.
+- A throwing `IRegionSource.FindRegion` is logged and leaves that set unchanged; other sets still evaluate.
+- Replaces `Shiny.DocumentDb.Geofencing` (`AddDocumentGeofencing` -> `AddRegionGeofencing`, `AddRegionSet<T>` ->
+  `AddDocumentRegionSet<T>`), `Shiny.DocumentDb.Geo` and `Shiny.Spatial.Geofencing`.
+
+## AI Tool Integration (Shiny.Locations.Extensions.AI)
+
+The optional `Shiny.Locations.Extensions.AI` package exposes `IGpsManager` as **read-only** `Microsoft.Extensions.AI` tool functions (`AIFunction`s) for LLM agents — the agent can learn where the user is and reason about distance/time to a destination, but never writes location data. You opt-in via `AddGps()` (an allow-list you control on behalf of the agent — **not** an OS permission prompt; location permission must already be granted). AOT-compatible (hand-built schemas, `JsonNode` results — no reflection).
+
+```csharp
+using Shiny.Locations;
+using Shiny.Locations.Extensions.AI;
+
+builder.Services.AddGps();                                  // registers IGpsManager
+builder.Services.AddLocationAITool();                       // read-only; there is no write capability for GPS
+
+// resolve the bundle and pass the tools to any IChatClient
+var tools = sp.GetRequiredService<LocationAITools>().Tools;
+var response = await chatClient.GetResponseAsync(
+    messages,
+    new ChatOptions { Tools = [.. tools] }
+);
+```
+
+Key types:
+- `AddLocationAITool()` — parameterless DI extension. GPS is read-only, so there is no builder or capability to opt-in to; the call registers all three location tools.
+- `LocationAITools` — resolve from DI; `.Tools` is `IReadOnlyList<AITool>`.
+
+Generated tools: `get_current_location` (last cached fix — lat/lng, accuracy, altitude, speed, heading, timestamp), `get_distance_to` (great-circle distance + compass bearing to a destination lat/lng), `estimate_travel_time` (`mode` walking/cycling/transit/driving or a `speedKmh` override → straight-line ETA).
+
+> The tools read the **last cached GPS reading**; start a listener or ensure a recent fix exists first. Distances and travel times are **great-circle (straight-line) estimates** — not routed ETAs with roads/traffic — and the tool results say so. Location permission should already be granted before invoking the agent.
+
+> Combine with the app's own functions: `Shiny.AppFunctions.Extensions.AI` (`AddAppFunctionAITools`, see the **shiny-appfunctions** skill) exposes the `[AppFunction]`s Siri and Gemini call as tools in the same `*AITools` bundle shape - concatenate the `.Tools` lists into one `ChatOptions.Tools`.
+
+## Reference Files
+
+- [API Reference](reference/api-reference.md)

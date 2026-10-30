@@ -1,0 +1,468 @@
+---
+name: shiny-bluetoothle
+description: Shiny BluetoothLE client/central operations for scanning, connecting, and communicating with BLE peripherals
+auto_invoke: true
+triggers:
+  - bluetooth
+  - ble
+  - bluetoothle
+  - bluetooth le
+  - bluetooth low energy
+  - peripheral
+  - gatt
+  - would like to open
+  - NotifyOnConnection
+  - NotifyOnNotification
+  - CanSendWriteWithoutResponse
+  - characteristic
+  - scan ble
+  - ble scan
+  - ble connect
+  - IBleManager
+  - IPeripheral
+  - MTU
+  - mtu
+  - RequestMtu
+  - TryRequestMtu
+  - TryRequestMtuAsync
+  - ICanRequestMtu
+  - BleConstants
+  - AutoConnect
+  - ConnectionConfig
+  - auto reconnect
+  - OnAdapterStateChanged
+  - IBleDelegate
+  - adapter state
+  - bluetooth off
+  - AttHeaderSize
+  - managed scan
+  - ble notification
+  - ble write
+  - ble read
+  - ble descriptor
+  - advertisement
+  - L2CAP
+  - L2Cap
+  - L2CapChannel
+  - ICanL2Cap
+  - OpenL2CapChannel
+  - OpenL2CapChannelAsync
+  - PSM
+  - l2cap file transfer
+  - ble file transfer
+  - UploadFile
+  - DownloadFile
+  - UploadFileWithProgress
+  - DownloadFileWithProgress
+  - L2CapTransferOptions
+  - L2CapTransferResult
+  - L2CapTransferException
+  - TransferProgress
+  - WriteCharacteristicMessageAsync
+  - NotifyCharacteristicMessages
+  - MessageExtensions
+  - ble message framing
+  - large gatt message
+  - BleMessageFraming
+  - BleMessageReassembler
+  - BleMessageFrameResult
+  - OpenL2CapTicketChannel
+  - ClaimTicket
+  - L2CapTickets
+  - L2CapTicketStatus
+  - L2CapTicketException
+  - l2cap ticket
+  - L2CapChannelStream
+  - AsStream
+---
+
+# Shiny BluetoothLE (Client/Central)
+
+## When to Use This Skill
+
+Use this skill when the user needs to:
+- Scan for BLE peripherals
+- Connect to and communicate with BLE devices
+- Read, write, or subscribe to GATT characteristics
+- Read or write GATT descriptors
+- Implement managed scans with automatic peripheral list management
+- Request MTU changes, pair with devices, or perform reliable write transactions
+- Read standard BLE services (device information, battery, heart rate)
+- Work with BLE advertisement data
+- Open L2CAP CoC channels to a peripheral that has published a PSM
+- Upload or download files over L2CAP with percent-complete / throughput / ETA metrics
+- Write or receive messages longer than one GATT operation (message framing)
+- Claim a ticketed L2CAP channel from a host that shares one PSM, or use a channel as a `Stream`
+
+Do NOT use this skill for BLE hosting/peripheral mode (advertising, GATT server). That is a separate library (`Shiny.BluetoothLE.Hosting`).
+
+## Library Overview
+
+- **NuGet Package**: `Shiny.BluetoothLE` (Android, iOS/tvOS/macOS, Windows, and Blazor WebAssembly via the Web Bluetooth API - `Shiny.BluetoothLE.Blazor` no longer exists), `Shiny.BluetoothLE.Linux` (Linux via BlueZ - a separate package so its D-Bus dependency never reaches WebAssembly)
+- **Registration**: `services.AddBluetoothLE()` everywhere except Linux, where it is `services.AddLinuxBluetoothLE()` from `Shiny.BluetoothLE.Linux`. The Web Bluetooth classes are `BrowserBleManager` / `BrowserPeripheral` / `BrowserAdvertisementData`
+- **Primary Namespace**: `Shiny.BluetoothLE`
+- **Managed Scan Namespace**: `Shiny.BluetoothLE.Managed`
+- **Platforms**: Android, iOS/tvOS/macOS (Apple), Windows, Linux (BlueZ), WebAssembly (Web Bluetooth)
+
+### tvOS
+
+tvOS runs the same CoreBluetooth central implementation as iOS — scanning, connecting, GATT and L2CAP are identical and there is **no tvOS-specific code to write**. Two Apple limits to encode in any guidance you generate:
+
+- **No background Bluetooth.** tvOS has no `bluetooth-central` background mode. Scans and connections end when the app suspends, and setting `AppleBleConfiguration.RestoreIdentifier` accomplishes nothing — do not suggest it for tvOS.
+- **No peripheral role.** `Shiny.BluetoothLE.Hosting` has no tvOS target; `CBMutableService`/`CBMutableCharacteristic` carry no constructors there. If asked to build a GATT server on tvOS, say it is not possible rather than producing code that cannot compile.
+
+Also worth mentioning when relevant: the Siri Remote is itself a BLE device, so an Apple TV has fewer simultaneous connections to spare than an iPhone.
+
+### Blazor WebAssembly / Web Bluetooth caveats
+
+The Blazor implementation is built on the browser's Web Bluetooth API and inherits its limitations:
+
+- **User-gesture gated.** Scans must be kicked off from a click handler. The browser shows a native chooser and Shiny only sees the peripheral(s) the user explicitly selects — there is no ambient/background scanning and no manufacturer data.
+- **HTTPS or `http://localhost` required.** The API is unavailable on plain `http://`.
+- **No background operation.** Scanning and connections stop when the tab is backgrounded or closed.
+- **Browser support is Chromium-only and requires enabling in some cases.** When generating setup instructions or troubleshooting guidance, note the following:
+    - **Chrome / Edge / Brave / Opera (desktop)**: enabled by default on Windows, macOS, Linux, ChromeOS. Fallback: `chrome://flags/#enable-web-bluetooth` (or `edge://flags`, etc.) → *Enabled* → restart. Linux also needs `experimental-web-platform-features` on and BlueZ 5.43+.
+    - **Chrome / Edge (Android)**: Android 6.0+. OS location services must be on for the chooser prompt to appear.
+    - **Samsung Internet**: enable `internet://flags` → *Web Bluetooth*.
+    - **Safari (macOS / iOS / iPadOS)**: not supported. On iOS/iPadOS suggest third-party WKWebView-based browsers *Bluefy* or *WebBLE*. Stock macOS Safari has no workaround.
+    - **Firefox**: not supported on any platform.
+
+## Setup
+
+Register in your `MauiProgram.cs` or host builder:
+
+```csharp
+// Basic registration
+services.AddBluetoothLE();
+
+// With a delegate for background events (adapter state changes, peripheral connections)
+services.AddBluetoothLE<MyBleDelegate>();
+
+// iOS/macOS only - with Apple-specific configuration
+services.AddBluetoothLE<MyBleDelegate>(new AppleBleConfiguration(
+    ShowPowerAlert: true,
+    RestoreIdentifier: "my-ble-app"
+));
+
+// iOS/Mac Catalyst - stop CoreBluetooth putting "accessory would like to open app" alerts in front of the
+// user when a connect, disconnect or notification happens with the app in the background. All three default
+// to true. Turn them off when the app connects from the background on purpose (kept running by location
+// updates, say) - NotifyOnNotification in particular is an alert per packet for a streaming device.
+services.AddBluetoothLE(new AppleBleConfiguration
+{
+    NotifyOnConnection = false,
+    NotifyOnDisconnection = false,
+    NotifyOnNotification = false
+});
+```
+
+The delegate class:
+
+```csharp
+public class MyBleDelegate : BleDelegate
+{
+    public override Task OnAdapterStateChanged(AccessState state)
+    {
+        // Handle adapter state changes (foreground or background)
+        return Task.CompletedTask;
+    }
+
+    public override Task OnPeripheralStateChanged(IPeripheral peripheral)
+    {
+        // Handle peripheral connection state changes (foreground or background)
+        return Task.CompletedTask;
+    }
+}
+```
+
+### Android Manifest (required for scanning)
+
+Add the BLE permissions to `Platforms/Android/AndroidManifest.xml`. **Critical:** on Android 12+ (API 31+) Shiny requests only `BLUETOOTH_SCAN` / `BLUETOOTH_CONNECT` at runtime — it does NOT request `ACCESS_FINE_LOCATION`. If you declare `BLUETOOTH_SCAN` *without* the `neverForLocation` flag, Android silently withholds **all** scan results unless fine location is also granted, so scans appear to return nothing. Unless your app actually derives physical location from BLE, always add `neverForLocation`:
+
+```xml
+<!-- Android 12+ -->
+<uses-permission android:name="android.permission.BLUETOOTH_SCAN"
+                 android:usesPermissionFlags="neverForLocation" />
+<uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+
+<!-- Android 11 and below -->
+<uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+<uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" android:maxSdkVersion="30" />
+```
+
+If you DO use BLE to infer location, omit `neverForLocation` and also request/grant `ACCESS_FINE_LOCATION` at runtime.
+
+Scans discover both legacy and Bluetooth 5 extended advertisements automatically (when the chipset supports extended advertising); legacy advertisements that virtually all peripherals send are always included. To force a legacy-only scan, use `new AndroidScanConfig(IncludeExtendedAdvertisements: false)`.
+
+## Code Generation Instructions
+
+When generating BLE client code, follow these conventions:
+
+1. **Always request access before scanning**: Call `IBleManager.RequestAccess()` or `RequestAccessAsync()` and verify `AccessState.Available` before starting a scan - it is how a denied permission or a switched-off adapter reaches the user. It is no longer load-bearing for the scan itself: as of 5.6 a `Scan()` issued before the Apple central has finished powering on is parked and started automatically (see #12), rather than being silently dropped.
+
+2. **Use reactive (IObservable) APIs as the primary pattern**: The library is built on System.Reactive. Use the `Async` extension methods only when you need Task-based patterns.
+
+3. **Dispose scan subscriptions**: Only one scan can be active at a time. Always dispose the scan subscription or call `StopScan()` when done - either one releases the slot. Never track "am I scanning" with your own flag; read `IBleManager.IsScanning`, which reports whether the *native* scan is running (it is `false` while a scan is parked waiting on the adapter).
+
+4. **Use string-based UUIDs for services and characteristics**: The API uses string UUIDs throughout (e.g., `"180D"` or `"0000180d-0000-1000-8000-00805f9b34fb"`).
+
+5. **Prefer `ConnectAsync` for simple connection flows**: It handles waiting for the connected state and has a default 30-second timeout.
+
+6. **Always call `CancelConnection()` or `DisconnectAsync()` when done**: Connections are not automatically cleaned up.
+
+7. **Use `IManagedScan` for UI-bound scanning**: It provides an `INotifyReadOnlyCollection` that works with MVVM bindings and handles peripheral deduplication, buffering, and stale removal.
+
+8. **Feature detection via interface checks**: Optional capabilities (MTU request, pairing, reliable transactions) use feature interfaces. Always use the `Try*` or `Can*` extension methods rather than casting directly.
+
+8a. **`IPeripheral.Mtu` is the usable payload, not the ATT MTU**: It is already the negotiated ATT MTU minus the 3-byte ATT header (`BleConstants.AttHeaderSize`), so fragment writes to `peripheral.Mtu` directly — never write `peripheral.Mtu - 3`. The units are asymmetric across a single call: `TryRequestMtu(512)` passes 512 as an ATT MTU to the platform but emits `509`, the payload. When handing a value to an API that genuinely wants an ATT MTU, add the header back with `peripheral.Mtu + BleConstants.AttHeaderSize`.
+
+9. **Handle `BleException` and `BleOperationException`**: GATT operations can throw these. `BleOperationException` includes a `GattStatusCode`. An in-flight operation that is interrupted by a disconnect faults with a `BleException` rather than hanging, so always have an `onError` handler (or `catch`) on read/write/discovery calls — with auto-reconnect enabled, retry once the peripheral reports `Connected` again. If the subscription is already gone when that fault arrives (a `WhenStatusChanged().Select(...).Switch()` pipeline tears down the in-flight call on the same disconnect), the fault is dropped rather than raised through `TaskScheduler.UnobservedTaskException` - never add an `UnobservedTaskException` filter for `BleException` to keep disconnects out of crash telemetry.
+
+10. **Connection auto-reconnect**: `ConnectionConfig.AutoConnect = true` (default) reconnects the peripheral after a dropped link or a power cycle on every platform — never write your own `WhenDisconnected().Subscribe(_ => peripheral.Connect())` loop on top of it, the two fight each other. Set `AutoConnect = false` for a faster initial connection when you intend to own reconnecting. `CancelConnection()` disposes the auto-reconnect, so a deliberate disconnect stays disconnected; call `Connect()` again to re-arm it. Auto-reconnect restores the *link* only — re-run per-connection setup (MTU request, authentication handshake, reading a config characteristic) from `WhenConnected()`, not once after the first `ConnectAsync()`.
+
+11. **The user toggling Bluetooth off/on is handled for you (5.6+, iOS/Mac Catalyst/macOS/Android)**: Do not re-implement it on those platforms. Neither OS reports the resulting drop per peripheral, so Shiny watches the adapter and, on power-down, runs the full disconnect teardown on every connected peripheral — `WhenStatusChanged()` emits `Disconnected` (agreeing with `IPeripheral.Status`, which reads the platform live), notifiers are cleared, in-flight operations fault with `BleException`, and on Android the GATT client is closed and service discovery re-armed. On power-up, every peripheral connected with `AutoConnect: true` is reconnected. Never write a `Connect()` call in `IBleDelegate.OnAdapterStateChanged(AccessState.Available)` for an `AutoConnect: true` peripheral — that is the pre-5.6 workaround and it now races Shiny's own reconnect. A `Connect()` issued while the adapter is off is parked and replayed when it returns rather than silently no-oping, so an explicit connect from that handler is safe but redundant. If you own reconnecting (`AutoConnect = false`), gate your `WhenDisconnected()` handler on the adapter being available, since you will now get a `Disconnected` on power-down. Starting a `Scan()` while a peripheral is waiting to reconnect is safe - the scan's cache prune skips peripherals with an armed auto-reconnect or a parked connect. Windows needs none of this (its `ConnectionStatusChanged` fires on a radio power-down by itself); on Linux (BlueZ) and Blazor the adapter cycle is *not* tracked, so there you still handle it yourself.
+
+12. **Never build your own "wait for the adapter, then scan" wrapper on Apple (5.6+)**: `Scan()` parks itself. A `CBCentralManager` reports `Unknown` for a moment after construction — and `IBleManager` builds it lazily, so on a cold start that moment *is* the `Scan()` call — and CoreBluetooth silently discards any scan issued below `PoweredOn`. Shiny holds the request and issues it the instant the central powers on, and re-issues it after an adapter power cycle. Do not write `RequestAccess().Where(x => x == AccessState.Available).SelectMany(_ => Scan())`, do not retry `Scan()` on a timer, and do not call `Scan()` from `IBleDelegate.OnAdapterStateChanged` — all three now race Shiny's own replay and will throw `There is already an existing scan`. Applies to iOS, tvOS, Mac Catalyst and macOS; Android and Windows never had the problem.
+
+13. **Service discovery is shared and owns its timeout (Android)**: The first operation that needs a service (read, write, notify, `GetService`, `GetCharacteristic`) triggers discovery. That discovery runs once per peripheral and is shared by every concurrent caller. The caller owns the timeout - apply it with Rx (`.Timeout(...)`) or a cancellation token; when the last caller waiting on the discovery times out or cancels, the discovery is torn down, and the next operation starts a new one. With no timeout of your own, discovery gives up after 30 seconds (not configurable). So the timeout on the first operation after connecting must leave room for discovery: a peripheral that takes 5 s to discover never answers a 5 s read. Either give that first operation a longer timeout or await `GetServiceAsync` once after connecting. Prefer `GetService(uuid)` / `GetCharacteristic(service, uuid)` (served from the discovered list) over `GetServices()` / `GetAllCharacteristics()`, which force a fresh discovery and cache refresh. If the discovered list comes back empty (seen right after a reconnect), a service lookup rediscovers once before throwing `No service found`. A disconnect during discovery fails every waiting operation with `BleException`, the same as any other in-flight GATT operation.
+
+## Messages Longer Than One GATT Operation
+
+A single write or notification carries at most `peripheral.Mtu` bytes - 20 until a larger MTU is negotiated. When a
+command, reply or event can be longer (JSON, a certificate, a scan result) and the peripheral is a
+`Shiny.BluetoothLE.Hosting` service using `NotifyMessage` and a `BleMessageReassembler`, use the
+message helpers (`MessageExtensions`). Do not hand-roll a chunking protocol, and do not use `WriteCharacteristicBlob`
+for this - the blob write has no message boundaries.
+
+```csharp
+using Shiny.BluetoothLE;
+
+// subscribe FIRST - a request/response reply travels as notifications to a subscribed central
+using var sub = peripheral
+    .NotifyCharacteristicMessages(serviceUuid, commandUuid, maxMessageBytes: 64 * 1024)
+    .Subscribe(message => this.OnReply(message));   // one emission per complete message
+
+await peripheral.WriteCharacteristicMessageAsync(
+    serviceUuid,
+    commandUuid,
+    JsonSerializer.SerializeToUtf8Bytes(command, AppJsonContext.Default.Command),
+    withResponse: true,       // default; each fragment is written with response
+    cancellationToken: ct,
+    timeoutMs: 3000           // per fragment, not for the whole message
+);
+```
+
+- `WriteCharacteristicMessageAsync` splits the message with `BleMessageFraming` - one header byte per fragment: bit 7
+  START, bit 6 END, bits 0-5 sequence - sized from `peripheral.Mtu`, and writes the fragments in order. Messages to the
+  same characteristic on the same peripheral are serialised, so concurrent callers never interleave.
+- `NotifyCharacteristicMessages` is cold; each subscription subscribes to the characteristic and gets its own
+  `BleMessageReassembler`. A message with a dropped or reordered fragment, or over `maxMessageBytes` (default 64 KB),
+  is discarded and the stream carries on with the next one - it does not error.
+- Against a framed request/response host, the final fragment's write response waits for the host's handler, so keep
+  `timeoutMs` above how long that handler takes.
+- Both ends must speak the format. Never mix these with a plain `WriteCharacteristicAsync` / `NotifyCharacteristic`
+  on the same framed characteristic.
+
+`BleMessageFraming.Encode(message, mtu)` and `BleMessageReassembler.Push(fragment, out message)` are public in
+`Shiny.BluetoothLE.Common` for the rare case of framing over some other transport - one reassembler per link and
+direction, never shared.
+
+## L2CAP Channels
+
+Some platforms support L2CAP Connection-Oriented Channels for streaming data without going through GATT. This is exposed as an optional capability — `ICanL2Cap` — on the platform `Peripheral` types.
+
+### Feature detection
+
+```csharp
+using Shiny.BluetoothLE;
+
+if (peripheral.IsL2CapAvailable())
+{
+    // Backend supports L2CAP
+}
+```
+
+### Opening a channel
+
+```csharp
+// Safe variant — returns an empty observable on unsupported platforms
+peripheral
+    .TryOpenL2CapChannel(psm: 0x0083, secure: false)
+    .Subscribe(channel => { /* ... */ });
+
+// Direct access when the cast succeeds
+if (peripheral is ICanL2Cap l2cap)
+{
+    l2cap.OpenL2CapChannel(psm: 0x0083, secure: false).Subscribe(channel =>
+    {
+        // channel.Psm           — the PSM the channel was opened on
+        // channel.Identifier    — the remote peer identifier
+        // channel.DataReceived  — IObservable<byte[]> of incoming bytes
+        // channel.Write(bytes)  — IObservable<Unit> that completes when bytes are queued
+    });
+}
+```
+
+`L2CapChannel` implements `IDisposable` — dispose it to close the underlying streams (Apple) or socket (Android).
+
+### Reading and writing
+
+```csharp
+using System.Reactive.Threading.Tasks;
+
+channel.DataReceived.Subscribe(
+    payload => Console.WriteLine($"<- {payload.Length} bytes"),
+    ex      => Console.WriteLine($"Channel error: {ex.Message}"),
+    ()      => Console.WriteLine("Remote closed the channel")
+);
+
+await channel.Write(payload).ToTask();
+```
+
+`DataReceived` is hot, emits right-sized byte arrays per read, completes on remote close, and surfaces I/O errors via `OnError`.
+
+### Platform notes
+
+- **iOS / Mac Catalyst / macOS**: `CBPeripheral.OpenL2CapChannel`. The `secure` flag is ignored — security is set by how the peripheral published the channel.
+- **Android**: `BluetoothDevice.CreateL2capChannel` / `CreateInsecureL2capChannel`. Requires API 29+. Throws `InvalidOperationException` on older versions.
+- **Windows / Linux / Blazor**: not currently supported (`IsL2CapAvailable()` returns false).
+
+### File Transfer (upload & download)
+
+Prefer these over hand-rolling a protocol on `DataReceived`/`Write`. The peripheral must be serving
+with `IBleHostingManager.OpenL2CapFileServer(...)` (or its own `ReadFileRequest` loop) — see the
+`shiny-ble-hosting` skill.
+
+The one-liners on `IPeripheral` open a channel, run the transfer, and close it again:
+
+```csharp
+using Shiny.BluetoothLE;
+
+var result = await peripheral.UploadFile(
+    psm: 0x0083,
+    localFilePath: "/path/to/file.bin",
+    remoteFileName: "file.bin",          // optional, defaults to the local file name
+    secure: false,
+    onProgress: p => Console.WriteLine(
+        $"{p.PercentComplete:P0} ({p.BytesTransferred}/{p.BytesToTransfer}) " +
+        $"{p.BytesPerSecond / 1024} KB/s, ETA {p.EstimatedTimeRemaining}"
+    ),
+    cancellationToken: ct
+);
+
+// result.BytesTransferred / result.Elapsed / result.BytesPerSecond (average for the whole transfer)
+
+await peripheral.DownloadFile(
+    psm: 0x0083,
+    remoteFileName: "firmware.bin",
+    localFilePath: "/local/firmware.bin",
+    onProgress: p => Console.WriteLine($"{p.PercentComplete:P0}")
+);
+```
+
+Rx flavours emit progress and complete when the transfer finishes — disposing the subscription cancels it:
+
+```csharp
+peripheral
+    .DownloadFileWithProgress(0x0083, "firmware.bin", "/local/firmware.bin")
+    .Subscribe(p => this.Percent = p.PercentComplete);
+```
+
+To move several files over **one** channel, open it yourself and use the `L2CapChannel` extensions:
+
+```csharp
+using var channel = await peripheral.OpenL2CapChannelAsync(psm: 0x0083, secure: false);
+
+await channel.UploadFile("/path/a.bin", onProgress: OnProgress);
+await channel.DownloadFile("b.bin", "/local/b.bin", onProgress: OnProgress);
+```
+
+Tuning is via `L2CapTransferOptions` (`BufferSize`, `ProgressInterval`, `IdleTimeout`).
+
+### A channel as a `Stream`
+
+`channel.AsStream()` returns an `L2CapChannelStream` - a `System.IO.Stream` over the channel for `CopyToAsync`,
+serializers, hashes, decoders:
+
+```csharp
+using var channel = await peripheral.OpenL2CapChannelAsync(psm, secure: false, cancellationToken: ct);
+await using var stream = channel.AsStream();          // disposing it closes the channel unless leaveOpen: true
+
+await using var file = File.Create(localPath);
+await stream.CopyToAsync(file, ct);                   // ends when the peer closes the channel
+```
+
+Async only - synchronous `Read`/`Write` throw `NotSupportedException`, and it is not seekable. Create it as soon as the
+channel opens: it subscribes to `DataReceived` on construction, and bytes that arrive before that are lost. Writes
+over `MaxWriteSize` (default 4096) are split. It shares the buffered reader the file-transfer helpers use, so it can
+take turns with `UploadFile`/`DownloadFile` on one channel.
+
+### Ticketed channels (`OpenL2CapTicketChannel`)
+
+A host running `L2CapTicketBroker` (see the `shiny-ble-hosting` skill) listens on **one** PSM for every transfer.
+It hands out a PSM and a single-use 32-character token over some authenticated route - typically the reply to a GATT
+command - and the channel has to present that token before it carries anything:
+
+```csharp
+var (psm, token) = ParseCaptureReply(reply);          // however your GATT command returns them
+
+await using var stream = await peripheral.OpenL2CapTicketChannel(
+    psm,
+    token,
+    secure: true,              // default - must match the broker's L2CapTicketBrokerOptions.Secure (default true)
+    maxWriteSize: 4096,
+    cancellationToken: ct
+);
+
+await using var file = File.Create(localPath);
+await stream.CopyToAsync(file, ct);                   // the host closes the channel when its handler returns
+```
+
+- Returns only once the host accepts the ticket; the handshake is `"SL2T" [version] [length] [token]` answered by
+  `"SL2T" [version] [status]` (`L2CapTickets`).
+- A refusal throws `L2CapTicketException` - `Status` is `UnknownTicket` (expired or never issued: request the transfer
+  again), `AlreadyClaimed`, `VersionMismatch`, `Malformed` or `Busy` - and the channel is already closed.
+- Throws `NotSupportedException` where the platform has no L2CAP.
+- A token is single use. Never retry the same token after a refusal; ask the host for a new one.
+
+With a channel you opened yourself, `channel.ClaimTicket(token, maxWriteSize, timeout, ct)` does the same handshake
+(20 second default timeout) and returns the stream; on failure it disposes the channel.
+
+**Progress metrics** are `TransferProgress` — identical in shape to `Shiny.Net.Http.TransferProgress`:
+`PercentComplete`, `BytesPerSecond`, `BytesTransferred`, `BytesToTransfer`, `EstimatedTimeRemaining`,
+`IsDeterministic`. Because the peer agrees the exact byte count up front, percent complete and ETA are
+always real (never `-1`) on both ends. Emissions fire on `ProgressInterval` (default 2s) plus a final
+100% emission carrying the average throughput.
+
+**Failures**: a refusal from the peer surfaces as `L2CapTransferException` with an `Error` code
+(`NotFound`, `NotPermitted`, `TooLarge`, `IoError`, `ProtocolError`, `Cancelled`). Refusals leave the
+channel usable for the next request; a transfer that dies mid-body does not — close the channel and
+open a new one. A failed download never leaves a partial local file behind.
+
+**Raw streaming**: `channel.SendFile(...)` is the protocol-less primitive — it just pushes bytes with
+progress and no handshake, so the receiver must already know the length and framing. Use `UploadFile`
+unless you are talking to a non-Shiny peer.
+- A `Stream` overload exists for non-file sources. Pass `totalBytes` to enable percent / ETA; pass `null` and `IsDeterministic` will be false, `PercentComplete` returns `-1`, `EstimatedTimeRemaining` returns `TimeSpan.Zero`.
+
+## Namespace Ambiguities
+
+- **`IPeripheral`**: Both `Shiny.BluetoothLE` and `Shiny.BluetoothLE.Hosting` define an `IPeripheral` interface. If both packages are referenced, do NOT add `Shiny.BluetoothLE.Hosting` as a global using. Use file-level `using` or FQN (`Shiny.BluetoothLE.IPeripheral`) to disambiguate.
+- **`DeviceInfo`**: `Shiny.BluetoothLE` has a `DeviceInfo` class that conflicts with `Microsoft.Maui.Devices.DeviceInfo` in MAUI apps. Use FQN when needed.
+
+## Best Practices
+
+- Use `ScanConfig` with `ServiceUuids` to filter scans, especially on iOS where background scanning requires a service UUID filter.
+- For Android, consider `AndroidScanConfig` for scan mode and batching options.
+- For Android, consider `AndroidConnectionConfig` for connection priority settings.
+- Always check `CharacteristicProperties` before attempting read/write/notify operations using the convenience extensions (`CanRead()`, `CanWrite()`, `CanNotify()`, etc.).
+- Use `WriteCharacteristicBlob()` for writing large data streams that exceed MTU size -- it already chunks to `peripheral.Mtu` (the payload size), so do not pre-chunk.
+- Use `WriteCharacteristicMessageAsync()` / `NotifyCharacteristicMessages()` when the peripheral needs to know where a message ends (a framed Shiny hosting characteristic) -- never mix them with plain writes/notifications on the same characteristic.
+- Writes without response (`withResponse: false`) on Apple already wait on CoreBluetooth's flow control (`CanSendWriteWithoutResponse` / `peripheralIsReadyToSendWriteWithoutResponse`) -- never add `Task.Delay` pacing between writes or poll `CanSendWriteWithoutResponse` yourself; just await each write in turn. The wait runs in a per-peripheral lane outside the shared GATT operation queue, so a stalled peripheral never blocks reads or notifications. If CoreBluetooth is not ready within 5 seconds the write fails with a `BleException` (not configurable - dispose/cancel sooner for a shorter limit); disposing the subscription before the value is handed to CoreBluetooth cancels the write.
+- Use `NotifyCharacteristic()` for real-time data streaming from a peripheral -- it handles subscription lifecycle and auto-reconnection.
+- Buffer or throttle scan results in UI scenarios to avoid performance issues.
+- Use `WhenConnected()` and `WhenDisconnected()` convenience extensions for cleaner connection state handling.
+
+## Reference Files
+
+- [API Reference](reference/api-reference.md)

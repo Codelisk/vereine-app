@@ -1,0 +1,118 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup Label="Ziele">
+    <!-- iOS braucht Xcode und baut nur auf macOS; Linux baut Android allein. -->
+    <TargetFrameworks>net11.0-android</TargetFrameworks>
+    <TargetFrameworks Condition="!$([MSBuild]::IsOSPlatform('Linux'))">$(TargetFrameworks);net11.0-ios</TargetFrameworks>
+    <OutputType>Exe</OutputType>
+    <UseMaui>true</UseMaui>
+    <SingleProject>true</SingleProject>
+    <RootNamespace>Vereine.App</RootNamespace>
+    <EnableDefaultCssItems>false</EnableDefaultCssItems>
+    <MauiXamlInflator>SourceGen</MauiXamlInflator>
+  </PropertyGroup>
+
+  <PropertyGroup Label="App">
+    <ApplicationTitle>Vereine</ApplicationTitle>
+    <ApplicationId>com.codelisk.vereine</ApplicationId>
+    <ApplicationDisplayVersion>0.1</ApplicationDisplayVersion>
+    <ApplicationVersion>1</ApplicationVersion>
+  </PropertyGroup>
+
+  <!-- AOT-Pflicht (docs/adr/0002-nativeaot.md): Android und iOS werden mit NativeAOT und vollem Trimmen veroeffentlicht.
+       PublishAot haengt bewusst nicht an der Konfiguration: es schaltet Trimming-Feature-Switches, und Debug soll sich
+       wie Release verhalten (learn.microsoft.com/dotnet/maui/deployment/nativeaot). `dotnet build` laeuft weiter mit Mono,
+       nur `dotnet publish` erzeugt NativeAOT. -->
+  <PropertyGroup Label="AOT">
+    <PublishAot>true</PublishAot>
+    <TrimMode>full</TrimMode>
+  </PropertyGroup>
+
+  <!-- Der Blazor-Router findet Seiten per Reflection ueber die App-Assembly ([Route]-Attribute). Blazor unterstuetzt
+       kein Trimmen der App-Assembly (dotnet/aspnetcore#63951); sie bleibt ganz erhalten, alles andere wird voll getrimmt. -->
+  <ItemGroup Label="AOT">
+    <TrimmerRootAssembly Include="$(AssemblyName)" />
+  </ItemGroup>
+
+  <!-- Eigener Code: jede Trim-/AOT-Warnung ist ein Fehler. Beim Kompilieren pruefen das die Roslyn-Analyzer
+       (Directory.Build.props), beim Publish ILLink und ILC das ganze Programm. Damit die App-Assembly dort einzeln
+       meldet, bekommt sie TrimmerSingleWarn=false (das SDK setzt das nur fuer die IntermediateAssembly, der
+       Android-NativeAOT-Weg verliert die Markierung, Stand 11.0 RC).
+       Fremde Assemblies melden sich gesammelt (IL2104 Trim, IL3053 AOT), dazu IL3000 aus dem Blazor-WebView. Blazor
+       selbst loest sie aus, die App kann sie nicht beheben. Sie bleiben im Publish sichtbar, brechen ihn aber nicht.
+       Das gilt erst nach dem Kompilieren, eigene Verstoesse bleiben dort Fehler. Liste und Bewertung: docs/adr/0002-nativeaot.md -->
+  <Target Name="_VereineAotWarnungen" AfterTargets="_PrepareTrimConfiguration">
+    <ItemGroup>
+      <ResolvedFileToPublish Condition="'%(ResolvedFileToPublish.Filename)' == '$(AssemblyName)' and '%(ResolvedFileToPublish.Extension)' == '.dll'">
+        <TrimmerSingleWarn>false</TrimmerSingleWarn>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+    <PropertyGroup>
+      <WarningsNotAsErrors>$(WarningsNotAsErrors);IL2104;IL3053;IL3000</WarningsNotAsErrors>
+    </PropertyGroup>
+  </Target>
+
+  <!-- Workaround Android-SDK 37.2 RC: Fuer die R8-Regeln sucht der Publish die DGML-Graphen von ILC nur im
+       klassischen obj-Layout (<obj>/<rid>/native/). Mit UseArtifactsOutput liegen die RID-Builds daneben
+       (<obj>_<rid>/native/), der Publish bricht mit XA4319 ab. Entfernen, sobald das SDK das Layout kennt. -->
+  <Target Name="_VereineNativeAotDgmlImArtefaktLayout"
+          AfterTargets="_CollectTrimmableNativeAotDgmlFiles"
+          Condition="'$(UseArtifactsOutput)' == 'true' and '@(_TrimmableNativeAotDgmlFiles->Count())' == '0'">
+    <PropertyGroup>
+      <_VereineObjBasis>$(IntermediateOutputPath.TrimEnd('\').TrimEnd('/'))</_VereineObjBasis>
+    </PropertyGroup>
+    <ItemGroup>
+      <_VereineDgml Include="@(_TrimmableNativeAotRuntimeIdentifiers->'$(_VereineObjBasis)_%(Identity)/native/$(TargetName).scan.dgml.xml')" />
+      <_VereineDgml Remove="@(_VereineDgml)" Condition="!Exists('%(_VereineDgml.Identity)')" />
+      <_TrimmableNativeAotDgmlFiles Include="@(_VereineDgml)" />
+    </ItemGroup>
+  </Target>
+
+  <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+    <SupportedOSPlatformVersion>26.0</SupportedOSPlatformVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
+    <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
+  </PropertyGroup>
+
+  <!-- Der Simulator uebernimmt die Entitlements (Keychain fuer SecureStorage) nur mit Signierung. -->
+  <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios' and '$(Configuration)' == 'Debug'">
+    <EnableCodeSigning>true</EnableCodeSigning>
+    <CodesignRequireProvisioningProfile>true</CodesignRequireProvisioningProfile>
+    <DisableCodesignVerification>true</DisableCodesignVerification>
+  </PropertyGroup>
+
+  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
+    <BundleResource Include="Platforms\iOS\PrivacyInfo.xcprivacy" LogicalName="PrivacyInfo.xcprivacy" />
+    <CustomEntitlements Include="keychain-access-groups" Type="StringArray" Value="%24(AppIdentifierPrefix)$(ApplicationId)" Visible="false" />
+  </ItemGroup>
+
+  <ItemGroup Label="Ressourcen">
+    <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#1E6B3A" />
+    <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#1E6B3A" BaseSize="128,128" />
+
+    <!-- Konfiguration ueber Shiny.Extensions.Configuration: appsettings.json plus Plattform-Datei -->
+    <MauiAsset Include="appsettings.json" LogicalName="appsettings.json" />
+    <MauiAsset Include="appsettings.android.json" LogicalName="appsettings.android.json" />
+    <MauiAsset Include="appsettings.apple.json" LogicalName="appsettings.apple.json" />
+    <Content Remove="appsettings*.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Maui.Controls" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" />
+    <PackageReference Include="Shiny.Hosting.Maui" />
+    <PackageReference Include="Shiny.Extensions.Configuration" />
+    <PackageReference Include="Shiny.Mediator" />
+    <PackageReference Include="Shiny.Mediator.Maui" />
+    <PackageReference Include="Shiny.Mediator.Blazor" />
+  </ItemGroup>
+
+  <ItemGroup Label="Nur Debug" Condition="'$(Configuration)' == 'Debug'">
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" />
+    <PackageReference Include="Microsoft.Maui.DevFlow.Agent" />
+    <PackageReference Include="Microsoft.Maui.DevFlow.Blazor" />
+  </ItemGroup>
+
+</Project>
